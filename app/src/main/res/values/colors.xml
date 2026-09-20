@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 与 ui/theme/Color.kt 保持一致：蓝白主色 + 轻渐变 -->
+    <color name="app_primary">#FF2F7BFF</color>
+    <color name="app_primary_deep">#FF1C5FE0</color>
+    <color name="app_primary_soft">#FFE8F1FF</color>
+    <color name="app_on_primary">#FFFFFFFF</color>
+    <color name="app_bg_top">#FFF6F9FF</color>
+    <color name="app_bg_bottom">#FFE4EEFD</color>
+    <color name="app_text_primary">#FF16213C</color>
+</resources>

@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">随记</string>
+    <string name="channel_reminders_name">提醒</string>
+    <string name="channel_reminders_desc">备忘录到点提醒的通知</string>
+    <string name="action_complete">完成</string>
+    <string name="action_snooze">稍后提醒</string>
+    <string name="action_skip">跳过本次</string>
+    <string name="notification_fallback_title">提醒</string>
+    <string name="notification_fallback_body">你有一个新的提醒</string>
+    <string name="notification_overdue_title">逾期%1$s · %2$s</string>
+    <string name="notification_open">查看详情</string>
+</resources>

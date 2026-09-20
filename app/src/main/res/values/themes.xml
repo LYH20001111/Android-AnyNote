@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 冷启动第一帧就落在蓝白渐变上，避免系统默认底色闪一下；状态栏图标保持深色。 -->
+    <style name="Theme.AnyNote" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/window_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>
