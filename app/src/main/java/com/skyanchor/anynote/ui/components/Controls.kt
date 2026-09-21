@@ -89,6 +89,7 @@ fun TonalButton(
             .background(container)
             .noRippleClickable(onClick)
             .padding(vertical = 12.dp, horizontal = 16.dp),
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         icon?.let {
@@ -96,6 +97,37 @@ fun TonalButton(
             Spacer(Modifier.width(8.dp))
         }
         Text(text, style = MaterialTheme.typography.labelLarge, color = tint)
+    }
+}
+
+/** 统一白色玻璃按钮：图标 + 文字居中，用于详情页快捷操作（完成/稍后/跳过）。 */
+@Composable
+fun GlassButton(
+    text: String,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    icon: ImageVector? = null,
+    tint: Color = AppColors.TextPrimary,
+    container: Color = AppColors.GlassStrong,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(16.dp)
+    val contentColor = if (enabled) tint else AppColors.TextTertiary
+    Row(
+        modifier
+            .clip(shape)
+            .background(if (enabled) container else AppColors.Glass)
+            .border(1.dp, AppColors.GlassBorder, shape)
+            .then(if (enabled) Modifier.noRippleClickable(onClick) else Modifier)
+            .padding(vertical = 14.dp, horizontal = 12.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        icon?.let {
+            Icon(it, null, tint = contentColor, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(text, style = MaterialTheme.typography.labelLarge, color = contentColor)
     }
 }
 

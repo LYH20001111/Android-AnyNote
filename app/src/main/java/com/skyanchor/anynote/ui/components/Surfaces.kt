@@ -76,16 +76,18 @@ fun GlassCard(
     modifier: Modifier = Modifier,
     corner: Int = 22,
     color: Color = AppColors.Glass,
+    brush: Brush? = null,
     contentPadding: PaddingValues = PaddingValues(16.dp),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(corner.dp)
+    val fill = if (brush != null) Modifier.background(brush) else Modifier.background(color)
     var base = modifier
         .shadow(10.dp, shape, clip = false, ambientColor = AppColors.Shadow, spotColor = AppColors.Shadow)
         .clip(shape)
-        .background(color)
+        .then(fill)
         .border(1.dp, AppColors.GlassBorder, shape)
     if (onClick != null) base = base.noRippleClickable(onClick)
     Column(base.padding(contentPadding), verticalArrangement = verticalArrangement, content = content)

@@ -1,5 +1,6 @@
 package com.skyanchor.anynote.ui.note
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,6 +26,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyanchor.anynote.core.dateTimeText
@@ -42,13 +48,12 @@ import com.skyanchor.anynote.ui.Route
 import com.skyanchor.anynote.ui.components.AppIcons
 import com.skyanchor.anynote.ui.components.AppSwitch
 import com.skyanchor.anynote.ui.components.FieldLabel
+import com.skyanchor.anynote.ui.components.GlassButton
 import com.skyanchor.anynote.ui.components.GlassCard
 import com.skyanchor.anynote.ui.components.InfoBanner
 import com.skyanchor.anynote.ui.components.KeyValueRow
-import com.skyanchor.anynote.ui.components.PrimaryButton
 import com.skyanchor.anynote.ui.components.ScreenScaffold
 import com.skyanchor.anynote.ui.components.SectionSpacer
-import com.skyanchor.anynote.ui.components.SettingRow
 import com.skyanchor.anynote.ui.components.SpacerHeight
 import com.skyanchor.anynote.ui.components.TagPill
 import com.skyanchor.anynote.ui.components.TextAction
@@ -120,7 +125,11 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
             verticalArrangement = Arrangement.Top,
         ) {
             item(key = "body") {
-                GlassCard(Modifier.fillMaxWidth().padding(top = 6.dp), corner = 22) {
+                GlassCard(
+                    Modifier.fillMaxWidth().padding(top = 6.dp),
+                    corner = 22,
+                    brush = Brush.linearGradient(listOf(Color(0xFFF1F6FF), Color(0xFFDCEBFF))),
+                ) {
                     Text(
                         note.title?.takeIf { it.isNotBlank() } ?: "无标题",
                         style = MaterialTheme.typography.headlineSmall,
@@ -136,7 +145,7 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         card.folder?.let { TagPill(it.name) }
                         Spacer(Modifier.width(6.dp))
-                        TagPill("优先级：${note.priority.label}", tint = AppColors.TextSecondary)
+                        TagPill("${note.priority.label}优先级", tint = AppColors.TextSecondary)
                         if (note.status == NoteStatus.COMPLETED) {
                             Spacer(Modifier.width(6.dp))
                             TagPill("已完成", tint = AppColors.Success)
@@ -149,23 +158,21 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
                 item(key = "actions") {
                     SectionSpacer(14)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        PrimaryButton(
+                        GlassButton(
                             "完成",
                             modifier = Modifier.weight(1f),
                             icon = AppIcons.Check,
                             enabled = pending.value.isNotEmpty(),
                         ) { runWork(work = { repo.complete(note.id) }, done = { env.state.invalidate() }) }
-                        TonalButton(
+                        GlassButton(
                             "稍后",
                             modifier = Modifier.weight(1f),
                             icon = AppIcons.Clock,
                         ) { snoozeTarget = true }
-                        TonalButton(
+                        GlassButton(
                             "跳过",
                             modifier = Modifier.weight(1f),
                             icon = AppIcons.SkipNext,
-                            tint = AppColors.Danger,
-                            container = AppColors.DangerSoft,
                         ) { runWork(work = { repo.skipCurrent(note.id) }, done = { env.state.invalidate() }) }
                     }
                 }
@@ -291,15 +298,8 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
                     InfoBanner("系统通知权限未开启，提醒到点也不会送达。")
                     SectionSpacer(10)
                 }
-                SettingRow(
-                    AppIcons.Delete,
-                    "移入回收站",
-                    modifier = Modifier.padding(horizontal = 0.dp),
-                    subtitle = "回收站中的备忘录不再触发提醒（基线 §16）",
-                    tint = AppColors.Danger,
-                    showChevron = false,
-                    onClick = { confirmTrash = true },
-                )
+                SectionSpacer(10)
+                TrashCard(onClick = { confirmTrash = true })
                 Spacer(Modifier.height(10.dp))
             }
         }
@@ -410,5 +410,41 @@ private fun RuleRow(rule: ReminderRule, onToggle: (Boolean) -> Unit, onEdit: () 
         TextAction("编辑", onClick = onEdit)
         Spacer(Modifier.width(6.dp))
         AppSwitch(rule.isEnabled, onToggle)
+    }
+}
+
+@Composable
+private fun TrashCard(onClick: () -> Unit) {
+    GlassCard(
+        Modifier.fillMaxWidth(),
+        corner = 20,
+        color = AppColors.DangerSoft,
+        onClick = onClick,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = 0.6f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(AppIcons.Delete, null, tint = AppColors.Danger, modifier = Modifier.size(20.dp))
+            }
+            Spacer(Modifier.width(13.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "移入回收站",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AppColors.Danger,
+                )
+                Text(
+                    "回收站中的备忘录不再触发提醒",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = AppColors.Danger.copy(alpha = 0.75f),
+                )
+            }
+        }
     }
 }
