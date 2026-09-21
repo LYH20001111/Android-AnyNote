@@ -22,11 +22,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -225,25 +225,36 @@ private fun EditorForm(
                 .verticalScroll(rememberScrollState()),
         ) {
             GlassCard(Modifier.fillMaxWidth(), corner = 20) {
-                TextField(
+                OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
                     placeholder = { Text("标题（可留空）", color = AppColors.TextTertiary) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     textStyle = MaterialTheme.typography.titleLarge.copy(color = AppColors.TextPrimary),
-                    colors = borderlessField(),
+                    colors = outlinedField(),
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(Modifier.height(2.dp))
-                TextField(
+                Spacer(Modifier.height(10.dp))
+                OutlinedTextField(
                     value = body,
-                    onValueChange = { body = it },
+                    onValueChange = { if (it.length <= BODY_MAX_LENGTH) body = it },
                     placeholder = { Text("记录内容…", color = AppColors.TextTertiary) },
                     minLines = 4,
                     maxLines = 12,
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = AppColors.TextPrimary),
-                    colors = borderlessField(),
+                    colors = outlinedField(),
+                    shape = RoundedCornerShape(14.dp),
+                    supportingText = {
+                        Text(
+                            "${body.length}/$BODY_MAX_LENGTH",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.End,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (body.length >= BODY_MAX_LENGTH) AppColors.Danger else AppColors.TextTertiary,
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -364,6 +375,9 @@ private fun EditorForm(
 /** 新建流程里规则还没有真正的 noteId，保存时由 Repository 统一改写。 */
 internal const val NEW_NOTE_KEY = "pending-note"
 
+/** 备忘录正文字数上限。 */
+private const val BODY_MAX_LENGTH = 1000
+
 @Composable
 private fun RuleSummaryRow(rule: ReminderRule, onEdit: () -> Unit, onDelete: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
@@ -403,13 +417,11 @@ private fun RuleSummaryRow(rule: ReminderRule, onEdit: () -> Unit, onDelete: () 
 }
 
 @Composable
-private fun borderlessField() = TextFieldDefaults.colors(
+private fun outlinedField() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = AppColors.Primary,
+    unfocusedBorderColor = Color(0xFFC4D2EA),
     focusedContainerColor = Color.Transparent,
     unfocusedContainerColor = Color.Transparent,
-    disabledContainerColor = Color.Transparent,
-    focusedIndicatorColor = Color.Transparent,
-    unfocusedIndicatorColor = Color.Transparent,
-    errorIndicatorColor = Color.Transparent,
     cursorColor = AppColors.Primary,
 )
 
