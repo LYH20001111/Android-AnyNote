@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.skyanchor.anynote.core.WEEKDAY_CN
 import com.skyanchor.anynote.core.listTimeText
 import com.skyanchor.anynote.data.entity.NoteCard
+import com.skyanchor.anynote.data.entity.ReminderOccurrence
 import com.skyanchor.anynote.ui.AppEnv
 import com.skyanchor.anynote.ui.Route
 import com.skyanchor.anynote.ui.Tab
@@ -62,7 +63,9 @@ fun CalendarScreen(env: AppEnv) {
     val marks = loadAsync<List<Pair<Int, Int>>>(month, emptyList()) {
         repo.monthMarks(month).map { it.key to it.value }
     }
-    val dayCards = loadAsync<List<NoteCard>>(selected, emptyList()) { repo.dayEntries(selected) }
+    val dayCards = loadAsync<List<Pair<NoteCard, ReminderOccurrence>>>(selected, emptyList()) {
+        repo.dayEntries(selected)
+    }
 
     ScreenScaffold(
         title = "日历",
@@ -110,8 +113,8 @@ fun CalendarScreen(env: AppEnv) {
                     verticalArrangement = Arrangement.spacedBy(11.dp),
                     contentPadding = PaddingValues(bottom = 96.dp),
                 ) {
-                    items(dayCards.value, key = { "${it.note.id}_${it.nextOccurrence?.id}" }) { card ->
-                        DayEntryRow(card) { env.router.push(Route.Detail(card.note.id)) }
+                    items(dayCards.value, key = { it.second.id }) { (card, occurrence) ->
+                        DayEntryRow(card, occurrence) { env.router.push(Route.Detail(card.note.id)) }
                     }
                 }
             }
@@ -242,7 +245,7 @@ private fun DayCell(date: LocalDate, selected: Boolean, count: Int, onClick: () 
 }
 
 @Composable
-private fun DayEntryRow(card: NoteCard, onClick: () -> Unit) {
+private fun DayEntryRow(card: NoteCard, occurrence: ReminderOccurrence, onClick: () -> Unit) {
     GlassCard(Modifier.fillMaxWidth(), corner = 18, onClick = onClick) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -265,7 +268,7 @@ private fun DayEntryRow(card: NoteCard, onClick: () -> Unit) {
                     maxLines = 1,
                 )
                 Text(
-                    card.nextOccurrence?.let { listTimeText(it.effectiveAt) } ?: "未设置提醒",
+                    listTimeText(occurrence.effectiveAt),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppColors.TextSecondary,
                 )

@@ -70,13 +70,13 @@ class AnyNoteRepository(
                     .thenByDescending { it.note.updatedAt }
             )
 
-    /** 日历：某一天的事件 + 对应备忘录。 */
-    fun dayEntries(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): List<NoteCard> {
+    /** 日历：某一天的事件 + 对应备忘录。事件本身随卡返回，列表按这一次的生效时间展示。 */
+    fun dayEntries(date: LocalDate, zone: ZoneId = ZoneId.systemDefault()): List<Pair<NoteCard, ReminderOccurrence>> {
         val from = date.atStartOfDay(zone).toInstant().toEpochMilli()
         val to = date.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
         return reminders.occurrencesBetween(from, to)
-            .mapNotNull { occurrence -> notes.get(occurrence.noteId)?.let { cardFor(it, occurrence) } }
-            .sortedBy { it.nextOccurrence?.effectiveAt ?: 0L }
+            .mapNotNull { occurrence -> notes.get(occurrence.noteId)?.let { Pair(cardFor(it, occurrence), occurrence) } }
+            .sortedBy { it.second.effectiveAt }
     }
 
     /** 日历页的当月打点：日 → 事件数。 */

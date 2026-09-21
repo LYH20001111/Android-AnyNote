@@ -292,14 +292,22 @@ class ReminderDao(private val db: AnyNoteDatabase) {
         }
     }
 
-    /** 日历页：某时间区间内的全部事件（含已完成，用于打点）。 */
+    /**
+     * 日历页：某时间区间内的全部事件（含已完成，用于打点）。
+     *
+     * 区间比较必须拆到裸列上：`COALESCE(a, b) >= ?` 左边是表达式、右边是绑定参数，
+     * 两者都没有 affinity，SQLite 会按存储类比较——INTEGER 恒小于 TEXT，条件永假，
+     * 日历因此永远查不到任何事件。裸列才能把列的数值 affinity 作用到参数上。
+     */
     fun occurrencesBetween(from: Long, to: Long): List<ReminderOccurrence> = db.readableDatabase.rawQuery(
         """
         SELECT * FROM reminder_occurrences
-        WHERE COALESCE(snoozed_until, scheduled_at) >= ? AND COALESCE(snoozed_until, scheduled_at) < ?
-          AND status != 'cancelled'
+        WHERE status != 'cancelled'
+          AND ((snoozed_until IS NULL AND scheduled_at >= ? AND scheduled_at < ?)
+            OR (snoozed_until IS NOT NULL AND snoozed_until >= ? AND snoozed_until < ?))
         ORDER BY COALESCE(snoozed_until, scheduled_at) ASC
-        """.trimIndent(), arrayOf(from.toString(), to.toString())
+        """.trimIndent(),
+        arrayOf(from.toString(), to.toString(), from.toString(), to.toString())
     ).use { c -> buildList { while (c.moveToNext()) add(c.toOccurrence()) } }
 
     /** 历史页查询（基线 §14）。 */
@@ -318,8 +326,19 @@ class ReminderDao(private val db: AnyNoteDatabase) {
             args += "%$it%"
         }
         folderId?.let { where.append(" AND n.folder_id = ?"); args += it }
-        from?.let { where.append(" AND COALESCE(o.completed_at, o.scheduled_at) >= ?"); args += it.toString() }
-        to?.let { where.append(" AND COALESCE(o.completed_at, o.scheduled_at) < ?"); args += it.toString() }
+        // 区间比较拆到裸列上，原因同 [occurrencesBetween]：表达式的 affinity 会丢，整数只按存储类比。
+        if (from != null || to != null) {
+            val lo = (from ?: Long.MIN_VALUE).toString()
+            val hi = (to ?: Long.MAX_VALUE).toString()
+            where.append(
+                " AND ((o.completed_at IS NULL AND o.scheduled_at >= ? AND o.scheduled_at < ?)" +
+                    " OR (o.completed_at IS NOT NULL AND o.completed_at >= ? AND o.completed_at < ?))"
+            )
+            args += lo
+            args += hi
+            args += lo
+            args += hi
+        }
         return db.readableDatabase.rawQuery(
             """
             SELECT o.* FROM reminder_occurrences o JOIN notes n ON n.id = o.note_id
