@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,27 +31,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyanchor.anynote.core.WEEKDAY_CN
-import com.skyanchor.anynote.core.listTimeText
+import com.skyanchor.anynote.core.dayOfWeekCn
+import com.skyanchor.anynote.core.timeOnlyText
+import com.skyanchor.anynote.core.toLocal
 import com.skyanchor.anynote.data.entity.NoteCard
+import com.skyanchor.anynote.data.entity.OccurrenceStatus
 import com.skyanchor.anynote.data.entity.ReminderOccurrence
 import com.skyanchor.anynote.ui.AppEnv
 import com.skyanchor.anynote.ui.Route
 import com.skyanchor.anynote.ui.Tab
 import com.skyanchor.anynote.ui.components.AppIcons
 import com.skyanchor.anynote.ui.components.BottomTabBar
+import com.skyanchor.anynote.ui.components.CategoryTile
 import com.skyanchor.anynote.ui.components.EmptyState
 import com.skyanchor.anynote.ui.components.FloatingActionButton
 import com.skyanchor.anynote.ui.components.GlassCard
 import com.skyanchor.anynote.ui.components.ScreenScaffold
 import com.skyanchor.anynote.ui.components.TagPill
 import com.skyanchor.anynote.ui.components.TextAction
+import com.skyanchor.anynote.ui.components.folderIcon
 import com.skyanchor.anynote.ui.components.noRippleClickable
 import com.skyanchor.anynote.ui.loadAsync
 import com.skyanchor.anynote.ui.theme.AppColors
+import com.skyanchor.anynote.ui.theme.CategoryPalette
 import java.time.LocalDate
 import java.time.YearMonth
+
+/** 日历格最多画几个分类点，超出的分类在当天的列表里看。 */
+private const val MAX_DOTS = 3
 
 @Composable
 fun CalendarScreen(env: AppEnv) {
@@ -60,8 +69,8 @@ fun CalendarScreen(env: AppEnv) {
     var month by remember { mutableStateOf(YearMonth.now()) }
     var selected by remember { mutableStateOf(LocalDate.now()) }
 
-    val marks = loadAsync<List<Pair<Int, Int>>>(month, emptyList()) {
-        repo.monthMarks(month).map { it.key to it.value }
+    val marks = loadAsync<Map<Int, List<String>>>(month, emptyMap()) {
+        repo.monthMarks(month)
     }
     val dayCards = loadAsync<List<Pair<NoteCard, ReminderOccurrence>>>(selected, emptyList()) {
         repo.dayEntries(selected)
@@ -95,30 +104,27 @@ fun CalendarScreen(env: AppEnv) {
             MonthGrid(
                 month = month,
                 selected = selected,
-                marks = marks.value.toMap(),
+                marks = marks.value,
                 onSelect = { selected = it },
             )
-            Spacer(Modifier.height(14.dp))
-            Text(
-                "${selected.monthValue} 月 ${selected.dayOfMonth} 日 · ${dayCards.value.size} 条提醒",
-                style = MaterialTheme.typography.titleSmall,
-                color = AppColors.TextSecondary,
-            )
-            Spacer(Modifier.height(8.dp))
-            if (dayCards.value.isEmpty()) {
-                EmptyState(AppIcons.Calendar, "这一天没有提醒", "换一天看看，或点右下角 + 新建")
-            } else {
-                LazyColumn(
-                    Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(11.dp),
-                    contentPadding = PaddingValues(bottom = 96.dp),
-                ) {
-                    items(dayCards.value, key = { it.second.id }) { (card, occurrence) ->
-                        DayEntryRow(card, occurrence) { env.router.push(Route.Detail(card.note.id)) }
+            Spacer(Modifier.height(16.dp))
+            DaySectionHeader(date = selected, count = dayCards.value.size)
+            Spacer(Modifier.height(9.dp))
+            Box(Modifier.weight(1f)) {
+                if (dayCards.value.isEmpty()) {
+                    EmptyState(AppIcons.Calendar, "这一天没有提醒", "换一天看看，或点右下角 + 新建")
+                } else {
+                    LazyColumn(
+                        Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(11.dp),
+                        contentPadding = PaddingValues(bottom = 96.dp),
+                    ) {
+                        items(dayCards.value, key = { it.second.id }) { (card, occurrence) ->
+                            DayEntryRow(card, occurrence) { env.router.push(Route.Detail(card.note.id)) }
+                        }
                     }
                 }
             }
-            Spacer(Modifier.height(84.dp))
         }
     }
 }
@@ -147,16 +153,21 @@ private fun Chevron(icon: androidx.compose.ui.graphics.vector.ImageVector, descr
             .noRippleClickable(onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, description, tint = AppColors.TextSecondary, modifier = Modifier.size(20.dp))
+        Icon(icon, description, tint = AppColors.TextSecondary, modifier = Modifier.size(21.dp))
     }
 }
 
 @Composable
-private fun MonthGrid(month: YearMonth, selected: LocalDate, marks: Map<Int, Int>, onSelect: (LocalDate) -> Unit) {
+private fun MonthGrid(
+    month: YearMonth,
+    selected: LocalDate,
+    marks: Map<Int, List<String>>,
+    onSelect: (LocalDate) -> Unit,
+) {
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        corner = 18,
-        contentPadding = PaddingValues(10.dp),
+        corner = 20,
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp),
     ) {
         Row(Modifier.fillMaxWidth()) {
             WEEKDAY_CN.forEach { label ->
@@ -169,7 +180,7 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, marks: Map<Int, Int
                 )
             }
         }
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(8.dp))
 
         val first = month.atDay(1)
         val cells = ArrayList<LocalDate?>().apply {
@@ -185,10 +196,14 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, marks: Map<Int, Int
                             .weight(1f)
                             .aspectRatio(1f)
                             .padding(2.dp),
-                        contentAlignment = Alignment.Center,
                     ) {
                         if (date != null) {
-                            DayCell(date = date, selected = date == selected, count = marks[date.dayOfMonth] ?: 0, onClick = { onSelect(date) })
+                            DayCell(
+                                date = date,
+                                selected = date == selected,
+                                colors = marks[date.dayOfMonth].orEmpty(),
+                                onSelect = onSelect,
+                            )
                         }
                     }
                 }
@@ -198,11 +213,11 @@ private fun MonthGrid(month: YearMonth, selected: LocalDate, marks: Map<Int, Int
 }
 
 @Composable
-private fun DayCell(date: LocalDate, selected: Boolean, count: Int, onClick: () -> Unit) {
+private fun DayCell(date: LocalDate, selected: Boolean, colors: List<String>, onSelect: (LocalDate) -> Unit) {
     val isToday = date == LocalDate.now()
     Box(
         Modifier
-            .size(38.dp)
+            .fillMaxSize()
             .clip(CircleShape)
             .background(
                 when {
@@ -212,68 +227,121 @@ private fun DayCell(date: LocalDate, selected: Boolean, count: Int, onClick: () 
                 }
             )
             .then(
-                if (isToday && !selected) Modifier.border(1.dp, AppColors.Primary, CircleShape) else Modifier
+                if (isToday && !selected) {
+                    Modifier.border(1.4.dp, AppColors.Primary.copy(alpha = 0.55f), CircleShape)
+                } else {
+                    Modifier
+                }
             )
-            .noRippleClickable(onClick),
+            .noRippleClickable { onSelect(date) },
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 "${date.dayOfMonth}",
-                style = MaterialTheme.typography.bodySmall,
+                style = if (selected) MaterialTheme.typography.titleSmall else MaterialTheme.typography.bodyLarge,
                 color = when {
                     selected -> AppColors.OnPrimary
                     isToday -> AppColors.Primary
                     else -> AppColors.TextPrimary
                 },
             )
+            Spacer(Modifier.height(3.dp))
+            CategoryDots(colors, selected)
+        }
+    }
+}
+
+/** 一格下面的分类点：颜色取自首页同一套 CategoryPalette，选中格内整体转白。 */
+@Composable
+private fun CategoryDots(colors: List<String>, selected: Boolean) {
+    Row(
+        Modifier.height(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        colors.take(MAX_DOTS).forEach { key ->
             Box(
                 Modifier
-                    .padding(top = 2.dp)
                     .size(4.dp)
                     .clip(CircleShape)
-                    .background(
-                        when {
-                            count <= 0 -> Color.Transparent
-                            selected -> AppColors.OnPrimary
-                            else -> AppColors.Primary
-                        }
-                    ),
+                    .background(if (selected) AppColors.OnPrimary else CategoryPalette.accent(key)),
             )
         }
     }
 }
 
 @Composable
+private fun DaySectionHeader(date: LocalDate, count: Int) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+        Text(
+            "${date.monthValue} 月 ${date.dayOfMonth} 日 · ${dayOfWeekCn(date.dayOfWeek)}",
+            style = MaterialTheme.typography.titleMedium,
+            color = AppColors.TextPrimary,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            if (count > 0) "$count 条提醒" else "暂无提醒",
+            style = MaterialTheme.typography.labelMedium,
+            color = AppColors.TextTertiary,
+        )
+    }
+}
+
+@Composable
 private fun DayEntryRow(card: NoteCard, occurrence: ReminderOccurrence, onClick: () -> Unit) {
-    GlassCard(Modifier.fillMaxWidth(), corner = 18, onClick = onClick) {
+    val folder = card.folder
+    val colorKey = folder?.colorKey ?: folder?.iconKey
+    val accent = CategoryPalette.accent(colorKey)
+    val overdue = occurrence.status == OccurrenceStatus.SCHEDULED &&
+        occurrence.effectiveAt < System.currentTimeMillis()
+    val snoozed = occurrence.status == OccurrenceStatus.SNOOZED
+    val hasTitle = card.note.title?.isNotBlank() == true
+    val bodyLine = card.note.body.lineSequence().firstOrNull { it.isNotBlank() }
+    val title = card.note.title?.takeIf { hasTitle } ?: bodyLine?.take(24) ?: "备忘录"
+
+    GlassCard(
+        modifier = Modifier.fillMaxWidth(),
+        corner = 20,
+        contentPadding = PaddingValues(13.dp),
+        onClick = onClick,
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(AppColors.PrimarySoft),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(AppIcons.Clock, null, tint = AppColors.Primary, modifier = Modifier.size(18.dp))
-            }
+            CategoryTile(colorKey, folderIcon(folder?.iconKey), size = 44, corner = 14)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    card.note.title?.takeIf { it.isNotBlank() }
-                        ?: card.note.body.lineSequence().firstOrNull()?.take(20)
-                        ?: "备忘录",
-                    style = MaterialTheme.typography.bodyLarge,
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
                     color = AppColors.TextPrimary,
                     maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    listTimeText(occurrence.effectiveAt),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AppColors.TextSecondary,
-                )
+                Spacer(Modifier.height(7.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    folder?.let { TagPill(it.name, tint = accent) }
+                    if (snoozed) TagPill("稍后提醒", tint = AppColors.Warning)
+                    if (overdue) TagPill("已逾期", tint = AppColors.Danger)
+                    if (card.attachmentCount > 0) {
+                        TagPill("${card.attachmentCount} 附件", tint = AppColors.TextSecondary)
+                    }
+                }
             }
-            card.folder?.let { TagPill(it.name) }
+            Spacer(Modifier.width(10.dp))
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    timeOnlyText(toLocal(occurrence.effectiveAt).toLocalTime()),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (overdue) AppColors.Danger else AppColors.TextPrimary,
+                )
+                if (card.rule?.type?.recurring == true) {
+                    Spacer(Modifier.height(5.dp))
+                    Icon(AppIcons.Repeat, "重复提醒", tint = accent, modifier = Modifier.size(13.dp))
+                }
+            }
         }
     }
 }

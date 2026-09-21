@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
@@ -107,8 +108,8 @@ fun NoteRow(
     onClick: () -> Unit,
 ) {
     val folder = card.folder
-    val accent = CategoryPalette.accent(folder?.colorKey ?: folder?.iconKey)
-    val container = CategoryPalette.container(folder?.colorKey ?: folder?.iconKey)
+    val colorKey = folder?.colorKey ?: folder?.iconKey
+    val accent = CategoryPalette.accent(colorKey)
     val occurrence = card.nextOccurrence
     val overdue = occurrence != null &&
         occurrence.status == OccurrenceStatus.SCHEDULED &&
@@ -126,15 +127,7 @@ fun NoteRow(
         onClick = onClick,
     ) {
         Row(verticalAlignment = Alignment.Top) {
-            Box(
-                Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(15.dp))
-                    .background(container),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(folderIcon(folder?.iconKey), null, tint = accent, modifier = Modifier.size(23.dp))
-            }
+            CategoryTile(colorKey, folderIcon(folder?.iconKey), size = 46, corner = 15)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -189,6 +182,27 @@ fun NoteRow(
                 }
             }
         }
+    }
+}
+
+/** 分类图标块：首页与日历共用，同一分类同一套 container→accent 渐变。 */
+@Composable
+fun CategoryTile(
+    colorKey: String?,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    size: Int = 46,
+    corner: Int = 15,
+) {
+    val accent = CategoryPalette.accent(colorKey)
+    Box(
+        modifier
+            .size(size.dp)
+            .clip(RoundedCornerShape(corner.dp))
+            .background(Brush.linearGradient(listOf(CategoryPalette.container(colorKey), accent.copy(alpha = 0.30f)))),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, null, tint = accent, modifier = Modifier.size((size * 0.5f).dp))
     }
 }
 

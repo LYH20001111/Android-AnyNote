@@ -79,13 +79,24 @@ class AnyNoteRepository(
             .sortedBy { it.second.effectiveAt }
     }
 
-    /** 日历页的当月打点：日 → 事件数。 */
-    fun monthMarks(month: YearMonth, zone: ZoneId = ZoneId.systemDefault()): Map<Int, Int> {
+    /** 日历页的当月打点：日 → 该天涉及的分类色（按事件数降序去重），与首页共用 CategoryPalette 色板。 */
+    fun monthMarks(month: YearMonth, zone: ZoneId = ZoneId.systemDefault()): Map<Int, List<String>> {
         val from = month.atDay(1).atStartOfDay(zone).toInstant().toEpochMilli()
         val to = month.plusMonths(1).atDay(1).atStartOfDay(zone).toInstant().toEpochMilli()
-        return reminders.occurrencesBetween(from, to)
-            .groupingBy { Instant.ofEpochMilli(it.effectiveAt).atZone(zone).toLocalDate().dayOfMonth }
-            .eachCount()
+        // 一次整月扫描会反复命中同一批备忘录与分类，缓存掉避免逐条查库。
+        val folderIdOfNote = HashMap<String, String?>()
+        val colorKeyOfFolder = HashMap<String, String>()
+        val keysByDay = LinkedHashMap<Int, MutableList<String>>()
+        reminders.occurrencesBetween(from, to).forEach { occurrence ->
+            val folderId = folderIdOfNote.getOrPut(occurrence.noteId) { notes.get(occurrence.noteId)?.folderId }
+                ?: return@forEach
+            val colorKey = colorKeyOfFolder.getOrPut(folderId) { folders.get(folderId)?.colorKey ?: "other" }
+            val day = Instant.ofEpochMilli(occurrence.effectiveAt).atZone(zone).toLocalDate().dayOfMonth
+            keysByDay.getOrPut(day) { mutableListOf() } += colorKey
+        }
+        return keysByDay.mapValues { (_, keys) ->
+            keys.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { it.key }
+        }
     }
 
     fun noteCard(noteId: String): NoteCard? = notes.get(noteId)?.let { cardFor(it) }
