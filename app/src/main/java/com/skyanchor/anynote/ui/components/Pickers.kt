@@ -19,9 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
@@ -43,12 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.skyanchor.anynote.core.compactDateTimeText
@@ -57,7 +50,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -198,8 +190,8 @@ private fun WheelSeparator() {
 }
 
 /**
- * 日期 + 时间选择对话框。时间精度到秒（基线 §5.2）：滚轮负责时/分，秒连同日期一起在
- * 顶部输入框里手输，避免为一列几乎用不上的秒把滚轮挤窄。
+ * 日期 + 时间选择对话框。时间精度到秒（基线 §5.2）：时/分/秒各一列滚轮，
+ * 日期走日历弹层，不提供手输——滚轮选定即可，避免手输格式校验的负担。
  */
 @Composable
 fun DateTimePickerDialog(
@@ -214,30 +206,12 @@ fun DateTimePickerDialog(
     var minute by remember { mutableIntStateOf(initial.minute) }
     var second by remember { mutableIntStateOf(initial.second) }
     var showCalendar by remember { mutableStateOf(false) }
-    var rawInput by remember { mutableStateOf("") }
-    var focused by remember { mutableStateOf(false) }
-    var invalid by remember { mutableStateOf(false) }
 
     fun picked(): LocalDateTime = LocalDateTime.of(date, LocalTime.of(hour, minute, second))
 
-    /** 能解析就立刻写回状态（滚轮与日历随之滚动），解析不了返回 false 且保持原值。 */
-    fun tryApply(text: String): Boolean {
-        if (text.isBlank()) return true
-        val parsed = parseFlexible(text, picked(), showTime) ?: return false
-        date = parsed.toLocalDate()
-        hour = parsed.hour
-        minute = parsed.minute
-        second = parsed.second
-        return true
-    }
-
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = {
-            TextAction("确定") {
-                if (focused && !tryApply(rawInput)) invalid = true else onConfirm(picked())
-            }
-        },
+        confirmButton = { TextAction("确定") { onConfirm(picked()) } },
         dismissButton = { TextAction("取消", color = AppColors.TextSecondary, onClick = onDismiss) },
         title = { AppDialogTitle(title) },
         text = {
@@ -247,54 +221,6 @@ fun DateTimePickerDialog(
                     .heightIn(max = 460.dp)
                     .verticalScroll(rememberScrollState()),
             ) {
-                val shape = RoundedCornerShape(12.dp)
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(shape)
-                        .background(if (invalid) AppColors.DangerSoft else AppColors.PrimarySoft.copy(alpha = 0.32f))
-                        .border(1.dp, if (invalid) AppColors.Danger else AppColors.Primary.copy(alpha = 0.28f), shape)
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        AppIcons.Edit,
-                        null,
-                        tint = if (invalid) AppColors.Danger else AppColors.Primary,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    BasicTextField(
-                        value = if (focused) rawInput else formatPicked(picked(), showTime),
-                        onValueChange = { rawInput = it; if (tryApply(it)) invalid = false },
-                        modifier = Modifier
-                            .weight(1f)
-                            .onFocusChanged { state ->
-                                if (state.isFocused && !focused) rawInput = formatPicked(picked(), showTime)
-                                focused = state.isFocused
-                                if (!state.isFocused) invalid = false
-                            },
-                        singleLine = true,
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = AppColors.TextPrimary),
-                        cursorBrush = SolidColor(AppColors.Primary),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Ascii,
-                            imeAction = ImeAction.Done,
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                if (tryApply(rawInput)) onConfirm(picked()) else invalid = true
-                            },
-                        ),
-                    )
-                }
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    if (invalid) "无法识别的格式" else inputHint(showTime),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (invalid) AppColors.Danger else AppColors.TextTertiary,
-                )
-                Spacer(Modifier.height(14.dp))
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -324,6 +250,8 @@ fun DateTimePickerDialog(
                         WheelPicker("时", hour, 23) { hour = it }
                         WheelSeparator()
                         WheelPicker("分", minute, 59) { minute = it }
+                        WheelSeparator()
+                        WheelPicker("秒", second, 59) { second = it }
                     }
                     Spacer(Modifier.height(14.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -379,101 +307,6 @@ private val QUICK_TIMES: List<Pair<String, (LocalDateTime) -> LocalDateTime>> = 
     "1小时后" to { now -> now.plusHours(1) },
     "明早9点" to { now -> now.plusDays(1).toLocalDate().atTime(9, 0) },
 )
-
-private val FORMATTER_DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-private val FORMATTER_TIME = DateTimeFormatter.ofPattern("HH:mm")
-private val FORMATTER_TIME_SECONDS = DateTimeFormatter.ofPattern("HH:mm:ss")
-
-internal fun formatPicked(value: LocalDateTime, showTime: Boolean): String = when {
-    !showTime -> value.format(FORMATTER_DATE)
-    value.second != 0 -> value.format(FORMATTER_DATE) + " " + value.format(FORMATTER_TIME_SECONDS)
-    else -> value.format(FORMATTER_DATE) + " " + value.format(FORMATTER_TIME)
-}
-
-private fun inputHint(showTime: Boolean): String =
-    if (showTime) "可直接输入，如 2026-09-21 09:30、9-21 9:30:15，或只写时间 09:30"
-    else "可直接输入日期，如 2026-09-21 或 9-21"
-
-private val DATE_TOKEN = Regex("""^(\d{1,4})[-/.](\d{1,2})(?:[-/.](\d{1,2}))?${'$'}""")
-private val TIME_TOKEN = Regex("""^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?${'$'}""")
-
-/**
- * 宽松解析手输内容：缺日期段沿用当前日期，缺时间段沿用当前时刻，所以"只改时间"
- * 和"只改日期"都能一次写完。任何一段越界（如 2 月 30 日）返回 null 交给界面报错。
- */
-internal fun parseFlexible(raw: String, fallback: LocalDateTime, showTime: Boolean): LocalDateTime? {
-    val normalized = raw.trim()
-        .replace('：', ':')
-        .replace('－', '-')
-        .replace('．', '.')
-        .replace('年', '-')
-        .replace('月', '-')
-        .replace('日', ' ')
-        .replace('点', ':')
-        .replace('时', ':')
-        .replace('分', ' ')
-        .replace('T', ' ')
-        .replace('t', ' ')
-        .replace(Regex("\\s+"), " ")
-        .trim()
-    if (normalized.isEmpty()) return null
-    if (!showTime && normalized.contains(':')) return null
-
-    var date: LocalDate? = null
-    var time: LocalTime? = null
-    for (token in normalized.split(' ')) {
-        if (token.isEmpty()) continue
-        val parsedDate = parseDateToken(token, fallback.toLocalDate())
-        val parsedTime = if (parsedDate == null) parseTimeToken(token) else null
-        when {
-            parsedDate != null -> {
-                if (date != null) return null
-                date = parsedDate
-            }
-            parsedTime != null -> {
-                if (time != null) return null
-                time = parsedTime
-            }
-            else -> return null
-        }
-    }
-    if (date == null && time == null) return null
-    return LocalDateTime.of(date ?: fallback.toLocalDate(), time ?: fallback.toLocalTime())
-}
-
-private fun parseDateToken(token: String, fallback: LocalDate): LocalDate? {
-    if (token.length == 8 && token.all(Char::isDigit)) {
-        return runCatching {
-            LocalDate.of(
-                token.substring(0, 4).toInt(),
-                token.substring(4, 6).toInt(),
-                token.substring(6, 8).toInt(),
-            )
-        }.getOrNull()
-    }
-    val matched = DATE_TOKEN.matchEntire(token) ?: return null
-    val first = matched.groupValues[1]
-    val g1 = first.toIntOrNull() ?: return null
-    val g2 = matched.groupValues[2].toIntOrNull() ?: return null
-    val g3 = matched.groupValues[3].toIntOrNull()
-    return if (g3 == null) {
-        runCatching {
-            if (first.length == 4) LocalDate.of(g1, g2, fallback.dayOfMonth)
-            else LocalDate.of(fallback.year, g1, g2)
-        }.getOrNull()
-    } else {
-        val year = if (first.length <= 2) 2000 + g1 else g1
-        runCatching { LocalDate.of(year, g2, g3) }.getOrNull()
-    }
-}
-
-private fun parseTimeToken(token: String): LocalTime? {
-    val matched = TIME_TOKEN.matchEntire(token) ?: return null
-    val hour = matched.groupValues[1].toIntOrNull() ?: return null
-    val minute = matched.groupValues[2].toIntOrNull() ?: return null
-    val second = matched.groupValues[3].toIntOrNull() ?: 0
-    return if (hour > 23 || minute > 59 || second > 59) null else LocalTime.of(hour, minute, second)
-}
 
 /** 表单里的日期时间展示行。 */
 @Composable
