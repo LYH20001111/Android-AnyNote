@@ -70,6 +70,7 @@ import com.skyanchor.anynote.ui.components.toUi
 import com.skyanchor.anynote.ui.loadAsync
 import com.skyanchor.anynote.ui.reminder.RuleForm
 import com.skyanchor.anynote.ui.reminder.newRule
+import com.skyanchor.anynote.ui.settings.BackgroundRunDialog
 import com.skyanchor.anynote.ui.theme.AppColors
 import java.io.File
 import kotlinx.coroutines.Dispatchers
@@ -139,6 +140,8 @@ private fun EditorForm(
     var editingRule by remember { mutableStateOf<ReminderRule?>(null) }
     var previewing by remember { mutableStateOf<AttachmentUi?>(null) }
     var saving by remember { mutableStateOf(false) }
+    var backgroundHint by remember { mutableStateOf(false) }
+    var pendingNav by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     val pickAttachment = rememberAttachmentPickers(
         onPicked = { stored, type -> attachments = attachments + stored.toUi(type) },
@@ -185,7 +188,21 @@ private fun EditorForm(
             }
             saving = false
             env.state.invalidate()
-            if (isNew) env.router.replace(Route.Detail(savedId)) else env.router.pop()
+            val navigate: () -> Unit = if (isNew) {
+                { env.router.replace(Route.Detail(savedId)) }
+            } else {
+                { env.router.pop() }
+            }
+            // 保存了启用提醒、但电池优化未豁免：先弹一次后台运行引导，再离开编辑页。
+            val needHint = rulesSnapshot.any { it.isEnabled } && settings.notificationsEnabled &&
+                !env.notifications.ignoresBatteryOptimizations && !settings.backgroundHintShown
+            if (needHint) {
+                settings.backgroundHintShown = true
+                pendingNav = navigate
+                backgroundHint = true
+            } else {
+                navigate()
+            }
         }
     }
 
@@ -325,6 +342,22 @@ private fun EditorForm(
     }
 
     previewing?.let { item -> AttachmentPreview(item, onDismiss = { previewing = null }) }
+
+    if (backgroundHint) {
+        BackgroundRunDialog(
+            onGo = {
+                backgroundHint = false
+                env.notifications.openBatteryOptimizationSettings()
+                pendingNav?.invoke()
+                pendingNav = null
+            },
+            onDismiss = {
+                backgroundHint = false
+                pendingNav?.invoke()
+                pendingNav = null
+            },
+        )
+    }
 }
 
 /** 新建流程里规则还没有真正的 noteId，保存时由 Repository 统一改写。 */

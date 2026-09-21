@@ -66,6 +66,11 @@ class SettingsStore(context: Context) {
         get() = prefs.getInt(KEY_MISSED_GRACE, 24)
         set(value) = prefs.edit().putInt(KEY_MISSED_GRACE, value).apply()
 
+    /** 「退出应用后仍能提醒」的一次性引导是否已弹过；之后只在设置页保留入口，避免反复打扰。 */
+    var backgroundHintShown: Boolean
+        get() = prefs.getBoolean(KEY_BACKGROUND_HINT, false)
+        set(value) = prefs.edit().putBoolean(KEY_BACKGROUND_HINT, value).apply()
+
     companion object {
         val SNOOZE_PRESETS = listOf(10, 30, 60)
         val GRACE_PRESETS = listOf(1, 6, 12, 24, 48)
@@ -82,5 +87,6 @@ class SettingsStore(context: Context) {
         private const val KEY_DEFAULT_SNOOZE = "default_snooze_minutes"
         private const val KEY_PREFER_ALARM_CLOCK = "prefer_alarm_clock"
         private const val KEY_MISSED_GRACE = "missed_grace_hours"
+        private const val KEY_BACKGROUND_HINT = "background_hint_shown"
     }
 }

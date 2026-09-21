@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.skyanchor.anynote.reminder.DeviceProfiles
 import com.skyanchor.anynote.ui.components.OptionRow
 import com.skyanchor.anynote.ui.components.TextAction
 import com.skyanchor.anynote.ui.theme.AppColors
@@ -109,6 +110,32 @@ fun TextInputDialog(
                     cursorColor = AppColors.Primary,
                 ),
                 modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        containerColor = Color.White,
+    )
+}
+
+/**
+ * 「保存提醒后」的一次性后台运行引导（基线 §24、§31）。
+ * 提醒由系统闹钟投递、不依赖进程存活，但省电策略把应用列入管控时，锁屏或清掉后台后
+ * 到点的提醒可能被延后甚至拦截。这一步必须在用户"刚设好提醒"时出现，
+ * 藏在设置页里等于没有——调用方负责用 SettingsStore.backgroundHintShown 保证只弹一次。
+ */
+@Composable
+fun BackgroundRunDialog(onGo: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { TextAction("去允许", onClick = onGo) },
+        dismissButton = { TextAction("暂不", color = AppColors.TextSecondary, onClick = onDismiss) },
+        title = { Text("让提醒在退出应用后照常响起", style = MaterialTheme.typography.titleMedium) },
+        text = {
+            Text(
+                "提醒由系统闹钟负责，随记不需要常驻后台。但若系统把随记列入省电管控，" +
+                    "锁屏或清掉后台后，到点的提醒可能被延后甚至拦截，尤其是国产 ROM。\n\n" +
+                    DeviceProfiles.manualHint(DeviceProfiles.current()),
+                style = MaterialTheme.typography.bodyMedium,
+                color = AppColors.TextSecondary,
             )
         },
         containerColor = Color.White,

@@ -265,8 +265,10 @@ class NotificationHelper(
     ): PendingIntent = PendingIntent.getBroadcast(
         appContext,
         requestCode,
-        Intent(action).apply {
-            setPackage(appContext.packageName)
+        // 必须显式指向 ReminderReceiver：它在 manifest 里没有 <intent-filter>，
+        // 只带 action + package 的隐式广播解析不到任何接收器，按钮点了永远没有响应。
+        Intent(appContext, ReminderReceiver::class.java).apply {
+            setAction(action)
             data = Uri.parse("anynote://reminder/$occurrenceId")
             putExtra(ReminderIntents.EXTRA_OCCURRENCE_ID, occurrenceId)
             putExtra(ReminderIntents.EXTRA_NOTE_ID, noteId)

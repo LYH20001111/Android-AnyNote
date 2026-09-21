@@ -28,6 +28,7 @@ import com.skyanchor.anynote.ui.components.PrimaryButton
 import com.skyanchor.anynote.ui.components.ScreenScaffold
 import com.skyanchor.anynote.ui.components.TextAction
 import com.skyanchor.anynote.ui.loadAsync
+import com.skyanchor.anynote.ui.settings.BackgroundRunDialog
 import com.skyanchor.anynote.ui.settings.ConfirmDialog
 import com.skyanchor.anynote.ui.theme.AppColors
 import kotlinx.coroutines.Dispatchers
@@ -46,6 +47,7 @@ fun ReminderRuleEditorScreen(env: AppEnv, noteId: String, ruleId: String?) {
     }
     var confirmDelete by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
+    var backgroundHint by remember { mutableStateOf(false) }
 
     fun save() {
         if (saving) return
@@ -55,7 +57,16 @@ fun ReminderRuleEditorScreen(env: AppEnv, noteId: String, ruleId: String?) {
             withContext(Dispatchers.IO) { repo.saveRule(snapshot) }
             saving = false
             env.state.invalidate()
-            env.router.pop()
+            // 电池优化未豁免时，清后台/锁屏后的到点投递可能被系统延后或拦截。
+            // 引导只在"刚保存了启用规则"时弹一次，入口长期保留在通知设置页。
+            val needHint = snapshot.isEnabled && repo.settings.notificationsEnabled &&
+                !env.notifications.ignoresBatteryOptimizations && !repo.settings.backgroundHintShown
+            if (needHint) {
+                repo.settings.backgroundHintShown = true
+                backgroundHint = true
+            } else {
+                env.router.pop()
+            }
         }
     }
 
@@ -118,6 +129,20 @@ fun ReminderRuleEditorScreen(env: AppEnv, noteId: String, ruleId: String?) {
                     env.state.invalidate()
                     env.router.pop()
                 }
+            },
+        )
+    }
+
+    if (backgroundHint) {
+        BackgroundRunDialog(
+            onGo = {
+                backgroundHint = false
+                env.notifications.openBatteryOptimizationSettings()
+                env.router.pop()
+            },
+            onDismiss = {
+                backgroundHint = false
+                env.router.pop()
             },
         )
     }
