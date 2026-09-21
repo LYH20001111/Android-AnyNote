@@ -119,7 +119,7 @@ fun ScreenScaffold(
     actions: @Composable RowScope.() -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
-    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 0.dp),
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Column(modifier.fillMaxSize()) {
