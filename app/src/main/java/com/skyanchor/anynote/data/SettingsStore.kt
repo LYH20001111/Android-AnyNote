@@ -24,8 +24,13 @@ class SettingsStore(context: Context) {
         get() = prefs.getBoolean(KEY_SOUND, true)
         set(value) = prefs.edit().putBoolean(KEY_SOUND, value).apply()
 
+    /**
+     * 应用角标默认关闭：它靠一条常驻静默通知承载待处理数量，每次提醒都会多出
+     * 一条无内容的"随记"通知，多数用户（以及不支持角标的启动器）只觉得是多余的；
+     * 只有三星、索尼等支持 setNumber 角标的启动器上它才有实际收益。
+     */
     var badgeEnabled: Boolean
-        get() = prefs.getBoolean(KEY_BADGE, true)
+        get() = prefs.getBoolean(KEY_BADGE, false)
         set(value) = prefs.edit().putBoolean(KEY_BADGE, value).apply()
 
     /** 新建备忘录时是否默认在通知中展示正文（基线 §10.3）。 */

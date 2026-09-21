@@ -225,7 +225,13 @@ class NotificationHelper(
 
     /** 角标计数：Android 没有公开 API，只能靠一条最低优先级的常驻通知承载。 */
     fun refreshBadge() {
-        if (!settings.badgeEnabled || !permissionGranted) return
+        if (!settings.badgeEnabled) {
+            // 关闭（含新装机默认关闭）时必须主动撤下：旧的常驻通知不会自己消失，
+            // 否则用户关了角标，通知栏里还会一直挂着一条空的「随记」。
+            runCatching { manager.cancel(BADGE_ID) }
+            return
+        }
+        if (!permissionGranted) return
         val pending = dao.pendingActive().size
         runCatching { manager.notify(BADGE_ID, badgeNotification(pending)) }
     }
