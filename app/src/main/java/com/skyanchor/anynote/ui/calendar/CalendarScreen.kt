@@ -18,9 +18,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,6 +63,7 @@ import com.skyanchor.anynote.ui.theme.AppColors
 import com.skyanchor.anynote.ui.theme.CategoryPalette
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneOffset
 
 /** 日历格最多画几个分类点，超出的分类在当天的列表里看。 */
 private const val MAX_DOTS = 3
@@ -68,6 +73,7 @@ fun CalendarScreen(env: AppEnv) {
     val repo = env.repository
     var month by remember { mutableStateOf(YearMonth.now()) }
     var selected by remember { mutableStateOf(LocalDate.now()) }
+    var showJump by remember { mutableStateOf(false) }
 
     val marks = loadAsync<Map<Int, List<String>>>(month, emptyMap()) {
         repo.monthMarks(month)
@@ -99,27 +105,39 @@ fun CalendarScreen(env: AppEnv) {
                 month = month,
                 onPrev = { month = month.minusMonths(1) },
                 onNext = { month = month.plusMonths(1) },
+                onJump = { showJump = true },
             )
             Spacer(Modifier.height(10.dp))
-            MonthGrid(
-                month = month,
-                selected = selected,
-                marks = marks.value,
-                onSelect = { selected = it },
-            )
-            Spacer(Modifier.height(16.dp))
-            DaySectionHeader(date = selected, count = dayCards.value.size)
-            Spacer(Modifier.height(9.dp))
-            Box(Modifier.weight(1f)) {
+            // 网格高度随月份周数变化（最多 6 周），整页可滚动避免下方内容被裁切。
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 96.dp),
+            ) {
+                item(key = "month_grid") {
+                    MonthGrid(
+                        month = month,
+                        selected = selected,
+                        marks = marks.value,
+                        onSelect = { selected = it },
+                    )
+                }
+                item(key = "day_header") {
+                    Column(Modifier.padding(top = 16.dp)) {
+                        DaySectionHeader(date = selected, count = dayCards.value.size)
+                    }
+                }
                 if (dayCards.value.isEmpty()) {
-                    EmptyState(AppIcons.Calendar, "这一天没有提醒", "换一天看看，或点右下角 + 新建")
+                    item(key = "empty") {
+                        EmptyState(
+                            AppIcons.Calendar,
+                            "这一天没有提醒",
+                            "换一天看看，或点右下角 + 新建",
+                            modifier = Modifier.padding(top = 9.dp),
+                        )
+                    }
                 } else {
-                    LazyColumn(
-                        Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(11.dp),
-                        contentPadding = PaddingValues(bottom = 96.dp),
-                    ) {
-                        items(dayCards.value, key = { it.second.id }) { (card, occurrence) ->
+                    items(dayCards.value, key = { it.second.id }) { (card, occurrence) ->
+                        Box(Modifier.padding(top = 11.dp)) {
                             DayEntryRow(card, occurrence) { env.router.push(Route.Detail(card.note.id)) }
                         }
                     }
@@ -127,19 +145,87 @@ fun CalendarScreen(env: AppEnv) {
             }
         }
     }
+
+    if (showJump) {
+        JumpToDateDialog(
+            initial = selected,
+            onDismiss = { showJump = false },
+            onConfirm = { date ->
+                selected = date
+                month = YearMonth.from(date)
+                showJump = false
+            },
+        )
+    }
+}
+
+/** 点标题栏的快速跳转：系统日历弹层，可切到年份列表，选定后直接定位到具体号数。 */
+@Composable
+private fun JumpToDateDialog(
+    initial: LocalDate,
+    onDismiss: () -> Unit,
+    onConfirm: (LocalDate) -> Unit,
+) {
+    // DatePicker 的 millis 按 UTC 存放，读写都以 UTC 换算，避免时区把日期挪一天。
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = initial.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextAction("确定") {
+                val millis = state.selectedDateMillis
+                if (millis != null) onConfirm(LocalDate.ofEpochDay(millis / 86_400_000L)) else onDismiss()
+            }
+        },
+        dismissButton = { TextAction("取消", color = AppColors.TextSecondary, onClick = onDismiss) },
+    ) {
+        DatePicker(
+            state = state,
+            title = {
+                Text(
+                    "跳转到指定日期",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = AppColors.TextPrimary,
+                    modifier = Modifier.padding(start = 24.dp, top = 20.dp, bottom = 4.dp),
+                )
+            },
+            showModeToggle = true,
+        )
+    }
 }
 
 @Composable
-private fun MonthHeader(month: YearMonth, onPrev: () -> Unit, onNext: () -> Unit) {
+private fun MonthHeader(
+    month: YearMonth,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+    onJump: () -> Unit,
+) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Chevron(AppIcons.ChevronLeft, "上一月", onPrev)
-        Text(
-            "${month.year} 年 ${month.monthValue} 月",
-            style = MaterialTheme.typography.titleLarge,
-            color = AppColors.TextPrimary,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Center,
-        )
+        Row(
+            Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(12.dp))
+                .noRippleClickable(onJump)
+                .padding(vertical = 6.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "${month.year} 年 ${month.monthValue} 月",
+                style = MaterialTheme.typography.titleLarge,
+                color = AppColors.TextPrimary,
+            )
+            Spacer(Modifier.width(4.dp))
+            Icon(
+                AppIcons.ChevronDown,
+                "快速跳转",
+                tint = AppColors.TextTertiary,
+                modifier = Modifier.size(18.dp),
+            )
+        }
         Chevron(AppIcons.ChevronRight, "下一月", onNext)
     }
 }
