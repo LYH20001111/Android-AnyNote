@@ -14,6 +14,7 @@ import com.skyanchor.anynote.ui.mine.MineScreen
 import com.skyanchor.anynote.ui.note.NoteDetailScreen
 import com.skyanchor.anynote.ui.note.NoteEditorScreen
 import com.skyanchor.anynote.ui.reminder.ReminderRuleEditorScreen
+import com.skyanchor.anynote.ui.settings.DataManagementScreen
 import com.skyanchor.anynote.ui.settings.FolderManageScreen
 import com.skyanchor.anynote.ui.settings.NotificationSettingsScreen
 import com.skyanchor.anynote.ui.settings.TrashScreen
@@ -51,6 +52,7 @@ fun AppRoot(env: AppEnv) {
             Route.Folders -> FolderManageScreen(env)
             Route.Trash -> TrashScreen(env)
             Route.NotificationSettings -> NotificationSettingsScreen(env)
+            Route.DataManagement -> DataManagementScreen(env)
         }
     }
 }

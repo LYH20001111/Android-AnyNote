@@ -188,6 +188,13 @@ fun MineScreen(env: AppEnv) {
                     subtitle = "删除的备忘录会保留在这里，不会自动清理",
                     onClick = { env.router.push(Route.Trash) },
                 )
+                Hairline(Modifier.padding(horizontal = 16.dp))
+                SettingRow(
+                    AppIcons.Shield,
+                    "数据管理",
+                    subtitle = "本地备份、恢复与清空数据",
+                    onClick = { env.router.push(Route.DataManagement) },
+                )
             }
 
             SectionSpacer(18)

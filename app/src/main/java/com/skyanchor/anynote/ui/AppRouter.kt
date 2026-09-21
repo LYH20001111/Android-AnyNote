@@ -19,6 +19,7 @@ sealed interface Route {
     data object Folders : Route
     data object Trash : Route
     data object NotificationSettings : Route
+    data object DataManagement : Route
 }
 
 /**

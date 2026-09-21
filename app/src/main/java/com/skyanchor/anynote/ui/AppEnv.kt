@@ -1,11 +1,13 @@
 package com.skyanchor.anynote.ui
 
 import com.skyanchor.anynote.data.AnyNoteRepository
+import com.skyanchor.anynote.data.backup.DataBackupManager
 import com.skyanchor.anynote.reminder.NotificationHelper
 
 /** 屏幕之间共享的运行环境：数据入口 + 路由 + 反馈通道。 */
 class AppEnv(
     val repository: AnyNoteRepository,
+    val dataBackup: DataBackupManager,
     val router: AppRouter,
     val state: AppState,
     val notifications: NotificationHelper,

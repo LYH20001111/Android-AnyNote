@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import com.skyanchor.anynote.data.AnyNoteRepository
 import com.skyanchor.anynote.data.SettingsStore
+import com.skyanchor.anynote.data.backup.DataBackupManager
 import com.skyanchor.anynote.data.dao.AttachmentDao
 import com.skyanchor.anynote.data.dao.FolderDao
 import com.skyanchor.anynote.data.dao.NoteDao
@@ -32,6 +33,7 @@ class AppContainer(context: Context) {
     val scheduler = ReminderScheduler(appContext, database, reminderDao, noteDao, settings)
     val coordinator = ReminderCoordinator(noteDao, reminderDao, folderDao, settings, scheduler, notifications)
     val repository = AnyNoteRepository(folderDao, noteDao, reminderDao, attachmentDao, settings, scheduler, coordinator)
+    val dataBackup = DataBackupManager(appContext, database, scheduler)
 
     /**
      * 冷启动、开机、权限恢复、系统时间变化后的全量重建。

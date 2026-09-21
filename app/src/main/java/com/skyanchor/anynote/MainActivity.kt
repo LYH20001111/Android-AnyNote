@@ -66,6 +66,7 @@ private fun AnyNoteRoot(intent: Intent?) {
     val env = remember(router) {
         AppEnv(
             repository = container.repository,
+            dataBackup = container.dataBackup,
             router = router,
             state = state,
             notifications = container.notifications,
