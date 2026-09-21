@@ -20,6 +20,7 @@ import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.humanSpan
 import com.skyanchor.anynote.data.SettingsStore
 import com.skyanchor.anynote.data.dao.ReminderDao
+import com.skyanchor.anynote.data.entity.HealthKind
 import com.skyanchor.anynote.data.entity.Note
 import com.skyanchor.anynote.data.entity.ReminderOccurrence
 
@@ -221,17 +222,23 @@ class NotificationHelper(
             .fold({ ShowOutcome.Posted }, { ShowOutcome.Error(it.javaClass.simpleName) })
     }
 
-    fun cancel(notificationId: Int) = runCatching { manager.cancel(notificationId) }
+    /**
+     * 取消失败的用户可见后果是"状态已经落库、通知还挂在栏里"，看起来就跟按钮没反应一样，
+     * 所以这里绝不能静默吞掉——必须留痕到诊断表（基线 §63）。
+     */
+    fun cancel(notificationId: Int) {
+        runCatching { manager.cancel(notificationId) }.onFailure {
+            dao.recordHealth(
+                HealthKind.RECEIVER_INTERRUPTED.storage,
+                reason = "通知 $notificationId 取消失败：${it.javaClass.simpleName}",
+                detail = it.message,
+            )
+        }
+    }
 
     /** 角标计数：Android 没有公开 API，只能靠一条最低优先级的常驻通知承载。 */
     fun refreshBadge() {
-        if (!settings.badgeEnabled) {
-            // 关闭（含新装机默认关闭）时必须主动撤下：旧的常驻通知不会自己消失，
-            // 否则用户关了角标，通知栏里还会一直挂着一条空的「随记」。
-            runCatching { manager.cancel(BADGE_ID) }
-            return
-        }
-        if (!permissionGranted) return
+        if (!settings.badgeEnabled || !permissionGranted) return
         val pending = dao.pendingActive().size
         runCatching { manager.notify(BADGE_ID, badgeNotification(pending)) }
     }
@@ -271,10 +278,11 @@ class NotificationHelper(
     ): PendingIntent = PendingIntent.getBroadcast(
         appContext,
         requestCode,
-        // 必须显式指向 ReminderReceiver：它在 manifest 里没有 <intent-filter>，
-        // 只带 action + package 的隐式广播解析不到任何接收器，按钮点了永远没有响应。
+        // 必须显式指定组件：Android 8+ 起隐式广播只投递给进程还活着的应用，
+        // 清后台后点按钮会被系统静默跳过（连日志都没有），三个动作按钮因此全部失效。
+        // 闹钟链路靠显式组件才能冷启动进程收广播，这里同理。
         Intent(appContext, ReminderReceiver::class.java).apply {
-            setAction(action)
+            this.action = action
             data = Uri.parse("anynote://reminder/$occurrenceId")
             putExtra(ReminderIntents.EXTRA_OCCURRENCE_ID, occurrenceId)
             putExtra(ReminderIntents.EXTRA_NOTE_ID, noteId)
