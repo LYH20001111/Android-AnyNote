@@ -127,7 +127,9 @@ class ReminderCoordinator(
     }
 
     /** 完成本次提醒事件（基线 §7、§15）。 */
-    fun complete(occurrenceId: String) {
+    fun complete(occurrenceId: String) = complete(occurrenceId, resync = true)
+
+    private fun complete(occurrenceId: String, resync: Boolean) {
         val occurrence = reminderDao.getOccurrence(occurrenceId) ?: return
         if (occurrence.status == OccurrenceStatus.COMPLETED) return
         val now = System.currentTimeMillis()
@@ -141,6 +143,7 @@ class ReminderCoordinator(
                 updatedAt = now,
             )
         )
+        if (!resync) return
 
         val rule = reminderDao.getRule(occurrence.ruleId)
         if (rule != null && rule.completionMode == CompletionMode.END_SERIES && rule.type.recurring) {
@@ -189,7 +192,23 @@ class ReminderCoordinator(
 
     /** 详情页"完成"：处理该备忘录当前全部待办事件。 */
     fun completeNote(noteId: String) {
-        reminderDao.pendingForNote(noteId).map { it.id }.forEach { complete(it) }
+        val pending = reminderDao.pendingForNote(noteId)
+        if (pending.isEmpty()) return
+        // 先把事件全部归档、最后每条规则只重排一次。逐条完成后立刻 syncRule 会把
+        // 快照里其余的待办行删掉重建（换新 id），批量操作就永远只能消费掉第一条。
+        val ruleIds = pending.map { it.ruleId }.distinct()
+        pending.forEach { complete(it.id, resync = false) }
+        val now = System.currentTimeMillis()
+        ruleIds.forEach { id ->
+            val rule = reminderDao.getRule(id) ?: return@forEach
+            if (rule.completionMode == CompletionMode.END_SERIES && rule.type.recurring) {
+                endSeries(id)
+            } else {
+                scheduler.syncRule(rule, now)
+            }
+        }
+        settleNote(noteId)
+        notifications.refreshBadge()
     }
 
     fun snoozeNote(noteId: String, minutes: Int) {
@@ -232,14 +251,17 @@ class ReminderCoordinator(
 
     /**
      * 一条备忘录没有任何待处理事件、也没有未来会触发的规则时，从当前列表移入历史（基线 §15）。
+     * 引擎算出的下一个时点如果表里已有归档行（提前完成/跳过的一次），这一轮已被消费，
+     * 不能再当作"未来会触发"，否则提前完成单次提醒后备忘录会永远停在当前列表。
      */
     private fun settleNote(noteId: String) {
         val note = noteDao.get(noteId) ?: return
         if (note.status != NoteStatus.ACTIVE) return
         if (reminderDao.pendingForNote(noteId).isNotEmpty()) return
         val now = Instant.now()
-        val hasFuture = reminderDao.rulesOfNote(noteId).any {
-            it.isEnabled && RecurrenceEngine.nextOccurrence(it, now) != null
+        val hasFuture = reminderDao.rulesOfNote(noteId).any { rule ->
+            rule.isEnabled && RecurrenceEngine.nextOccurrence(rule, now)
+                ?.let { next -> reminderDao.occurrenceAt(rule.id, next.toEpochMilli()) == null } == true
         }
         if (!hasFuture && note.completionEnabled) noteDao.markCompleted(noteId, true)
     }

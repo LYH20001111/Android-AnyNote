@@ -205,6 +205,19 @@ class ReminderDao(private val db: AnyNoteDatabase) {
         "SELECT * FROM reminder_occurrences WHERE status IN ('scheduled','snoozed')", null
     ).use { c -> buildList { while (c.moveToNext()) add(c.toOccurrence()) } }
 
+    /**
+     * 该规则已在表中占用、且还会与未来重合物化的触发时刻集合。
+     * [ReminderScheduler.syncRule] 靠它去重：被提前完成/跳过/推迟的未来时点不能被重排"复活"，
+     * 否则历史记录无限累积、待处理提醒也永远清不掉。
+     * 排除 scheduled（重排前本来就会被删）与 cancelled（事件只是随回收站挂起，恢复后必须能再物化）。
+     */
+    fun occupiedTimesForRule(ruleId: String): Set<Long> = db.readableDatabase.rawQuery(
+        """
+        SELECT scheduled_at FROM reminder_occurrences
+        WHERE rule_id = ? AND status IN ('triggered','snoozed','completed','skipped','expired')
+        """.trimIndent(), arrayOf(ruleId)
+    ).use { c -> buildSet { while (c.moveToNext()) add(c.getLong(0)) } }
+
     fun occurrenceAt(ruleId: String, scheduledAt: Long): ReminderOccurrence? = db.readableDatabase.rawQuery(
         "SELECT * FROM reminder_occurrences WHERE rule_id = ? AND scheduled_at = ? LIMIT 1",
         arrayOf(ruleId, scheduledAt.toString())

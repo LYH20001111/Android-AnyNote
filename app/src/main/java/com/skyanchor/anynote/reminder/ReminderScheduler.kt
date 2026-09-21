@@ -106,6 +106,10 @@ class ReminderScheduler(
      * 重排一条规则：先取消它全部未触发的事件（基线 §23 禁止只更新数据库），
      * 再按引擎结果重新物化并注册。已触发/已稍后提醒的"当前这一次"不受影响，
      * 排队补发中的那一次也不受影响（见 [ReminderDao.scheduledForRule]）。
+     *
+     * 物化前必须按 [ReminderDao.occupiedTimesForRule] 去重：表里已有同一触发时刻的行
+     * （提前完成/跳过/推迟的归档行）就不能再建新行，否则"完成一次 → 重排 → 复活同一次"
+     * 会无限循环，历史记录里堆满一模一样的提醒。
      */
     fun syncRule(rule: ReminderRule, now: Long = System.currentTimeMillis()) {
         reminderDao.scheduledForRule(rule.id).forEach { cancel(it) }
@@ -115,11 +119,12 @@ class ReminderScheduler(
         if (!rule.isEnabled || !settings.notificationsEnabled || note.status.storage != "active") return
 
         val zone = ZoneId.systemDefault()
+        val occupied = reminderDao.occupiedTimesForRule(rule.id)
         val instants = RecurrenceEngine
             .occurrences(rule, Instant.ofEpochMilli(now), Instant.ofEpochMilli(now + SEARCH_WINDOW_MS), zone)
-            .take(MAX_MATERIALIZED)
             .map { it.toEpochMilli() }
-            .filter { it > now }
+            .filter { it > now && it !in occupied }
+            .take(MAX_MATERIALIZED)
 
         instants.forEachIndexed { index, millis ->
             val occurrence = ReminderOccurrence(
