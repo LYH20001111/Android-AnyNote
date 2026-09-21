@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,14 +52,16 @@ private fun tabIcon(tab: Tab): ImageVector = when (tab) {
 
 @Composable
 fun BottomTabBar(current: Tab, onSelect: (Tab) -> Unit) {
+    val shape = RoundedCornerShape(22.dp)
     Row(
         Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
             .padding(horizontal = 16.dp, vertical = 10.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .shadow(14.dp, shape, clip = false, ambientColor = AppColors.Shadow, spotColor = AppColors.Shadow)
+            .clip(shape)
             .background(AppColors.GlassStrong)
-            .border(1.dp, AppColors.GlassBorder, RoundedCornerShape(20.dp))
+            .border(1.dp, AppColors.GlassBorder, shape)
             .padding(vertical = 9.dp, horizontal = 8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -82,6 +85,14 @@ fun BottomTabBar(current: Tab, onSelect: (Tab) -> Unit) {
                     style = MaterialTheme.typography.labelSmall,
                     color = if (active) AppColors.Primary else AppColors.TextTertiary,
                 )
+                Spacer(Modifier.height(3.dp))
+                Box(
+                    Modifier
+                        .width(16.dp)
+                        .height(3.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(if (active) AppColors.Primary else Color.Transparent),
+                )
             }
         }
     }
@@ -102,68 +113,80 @@ fun NoteRow(
     val overdue = occurrence != null &&
         occurrence.status == OccurrenceStatus.SCHEDULED &&
         occurrence.effectiveAt < System.currentTimeMillis()
+    val snoozed = occurrence?.status == OccurrenceStatus.SNOOZED
+    val bodyLine = card.note.body.lineSequence().firstOrNull { it.isNotBlank() }
+    val hasTitle = card.note.title?.isNotBlank() == true
+    val title = card.note.title?.takeIf { hasTitle } ?: bodyLine?.take(24) ?: "备忘录"
+    val summary = if (hasTitle) bodyLine?.take(28) else null
 
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        corner = 20,
+        corner = 22,
         contentPadding = PaddingValues(14.dp),
         onClick = onClick,
     ) {
         Row(verticalAlignment = Alignment.Top) {
             Box(
                 Modifier
-                    .size(42.dp)
-                    .clip(RoundedCornerShape(14.dp))
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(15.dp))
                     .background(container),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(folderIcon(folder?.iconKey), null, tint = accent, modifier = Modifier.size(21.dp))
+                Icon(folderIcon(folder?.iconKey), null, tint = accent, modifier = Modifier.size(23.dp))
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(
-                    card.note.title?.takeIf { it.isNotBlank() } ?: card.note.body.lineSequence().firstOrNull()?.take(24)
-                    ?: "备忘录",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = AppColors.TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(4.dp))
-                val timeLabel = occurrence?.let { listTimeText(it.effectiveAt) } ?: "未设置提醒"
-                Text(
-                    timeLabel + (card.rule?.let { if (it.type.recurring) " · ${RecurrenceEngine.describe(it)}" else "" } ?: ""),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = when {
-                        overdue -> AppColors.Danger
-                        occurrence?.status == OccurrenceStatus.SNOOZED -> AppColors.Warning
-                        else -> AppColors.TextSecondary
-                    },
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(7.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = AppColors.TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    if (trailing != null) {
+                        trailing()
+                    } else {
+                        PriorityDot(card.note.priority)
+                    }
+                }
+                if (summary != null) {
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        summary,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AppColors.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(Modifier.height(9.dp))
+                val timeLabel = (occurrence?.let { listTimeText(it.effectiveAt) } ?: "未设置提醒") +
+                    (card.rule?.let { if (it.type.recurring) " · ${RecurrenceEngine.describe(it)}" else "" } ?: "")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    TagPill(
+                        timeLabel,
+                        modifier = Modifier.weight(1f, fill = false),
+                        tint = when {
+                            overdue -> AppColors.Danger
+                            snoozed -> AppColors.Warning
+                            else -> AppColors.TextSecondary
+                        },
+                        icon = AppIcons.Clock,
+                    )
                     folder?.let { TagPill(it.name, tint = accent) }
-                    if (occurrence?.status == OccurrenceStatus.SNOOZED) {
-                        Spacer(Modifier.width(6.dp))
-                        TagPill("稍后提醒", tint = AppColors.Warning)
-                    }
-                    if (overdue) {
-                        Spacer(Modifier.width(6.dp))
-                        TagPill("已逾期", tint = AppColors.Danger)
-                    }
+                    if (snoozed) TagPill("稍后提醒", tint = AppColors.Warning)
+                    if (overdue) TagPill("已逾期", tint = AppColors.Danger)
                     if (card.attachmentCount > 0) {
-                        Spacer(Modifier.width(6.dp))
                         TagPill("${card.attachmentCount} 附件", tint = AppColors.TextSecondary)
                     }
                 }
-            }
-            if (trailing != null) {
-                Spacer(Modifier.width(8.dp))
-                Box(Modifier.padding(top = 2.dp), contentAlignment = Alignment.Center) { trailing() }
-            } else {
-                PriorityDot(card.note.priority, Modifier.padding(top = 8.dp))
             }
         }
     }

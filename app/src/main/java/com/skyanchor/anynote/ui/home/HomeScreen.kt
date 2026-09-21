@@ -40,6 +40,7 @@ import com.skyanchor.anynote.ui.components.ScreenScaffold
 import com.skyanchor.anynote.ui.components.SearchField
 import com.skyanchor.anynote.ui.loadAsync
 import com.skyanchor.anynote.ui.theme.AppColors
+import com.skyanchor.anynote.ui.theme.CategoryPalette
 
 @Composable
 fun HomeScreen(env: AppEnv) {
@@ -58,8 +59,8 @@ fun HomeScreen(env: AppEnv) {
     ScreenScaffold(
         title = "随记",
         actions = {
-            IconCircleButton(AppIcons.Inbox, "回收站", tint = AppColors.TextPrimary) {
-                env.router.push(Route.Trash)
+            IconCircleButton(AppIcons.Calendar, "日历", size = 44, tint = AppColors.TextPrimary) {
+                env.router.selectTab(Tab.Calendar)
             }
         },
         bottomBar = { BottomTabBar(Tab.Home) { env.router.selectTab(it) } },
@@ -74,29 +75,33 @@ fun HomeScreen(env: AppEnv) {
                 .padding(horizontal = 16.dp)
         ) {
             SearchField(query, "搜索备忘录…", Modifier.fillMaxWidth()) { query = it }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val selected = folderId
                 FilterChip("全部", selected == null) { folderId = null }
                 Spacer(Modifier.width(8.dp))
-                LazyRow(Modifier.weight(1f)) {
+                LazyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(folders.value, key = { it.id }) { folder ->
                         FilterChip(
                             folder.name,
                             selected == folder.id,
-                            modifier = Modifier.padding(end = 8.dp),
+                            accent = CategoryPalette.accent(folder.colorKey),
+                            container = CategoryPalette.container(folder.colorKey),
                         ) { folderId = if (selected == folder.id) null else folder.id }
                     }
                 }
             }
-            HomeList(cards.value) { env.router.push(Route.Detail(it.note.id)) }
-            Spacer(Modifier.height(84.dp))
+            HomeList(cards.value, Modifier.weight(1f)) { env.router.push(Route.Detail(it.note.id)) }
         }
     }
 }
 
 @Composable
-private fun HomeList(cards: List<NoteCard>, onClick: (NoteCard) -> Unit) {
+private fun HomeList(
+    cards: List<NoteCard>,
+    modifier: Modifier = Modifier,
+    onClick: (NoteCard) -> Unit,
+) {
     if (cards.isEmpty()) {
         EmptyState(AppIcons.Bell, "还没有提醒", "点击右下角 + 新建一条备忘录")
         return
@@ -105,9 +110,9 @@ private fun HomeList(cards: List<NoteCard>, onClick: (NoteCard) -> Unit) {
     cards.forEach { grouped.getOrPut(groupOf(it.nextOccurrence?.effectiveAt)) { mutableListOf() } += it }
 
     LazyColumn(
-        Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(top = 10.dp, bottom = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(11.dp),
+        modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(top = 10.dp, bottom = 96.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         grouped.forEach { (group, groupItems) ->
             item(key = "header_${group.name}") {

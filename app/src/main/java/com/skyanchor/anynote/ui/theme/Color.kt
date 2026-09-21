@@ -23,6 +23,7 @@ object AppColors {
     val GlassStrong = Color(0xF5FFFFFF)
     val GlassBorder = Color(0x40FFFFFF)
     val Hairline = Color(0x1416213C)
+    val Shadow = Color(0x241B3A6B)
 
     val Danger = Color(0xFFF2555A)
     val DangerSoft = Color(0xFFFFECEE)
@@ -41,6 +42,7 @@ object CategoryPalette {
         "life" to (Color(0xFF1FC47B) to Color(0xFFE6F9F0)),
         "family" to (Color(0xFFFF9500) to Color(0xFFFFF3E0)),
         "study" to (Color(0xFF8B5CF6) to Color(0xFFF1EAFF)),
+        "custom" to (Color(0xFF0E9F9F) to Color(0xFFE3F6F6)),
         "other" to (Color(0xFF7A879F) to Color(0xFFEEF1F6)),
     )
 

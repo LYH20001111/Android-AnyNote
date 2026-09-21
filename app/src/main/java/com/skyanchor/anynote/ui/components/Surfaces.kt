@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -82,6 +83,7 @@ fun GlassCard(
 ) {
     val shape = RoundedCornerShape(corner.dp)
     var base = modifier
+        .shadow(10.dp, shape, clip = false, ambientColor = AppColors.Shadow, spotColor = AppColors.Shadow)
         .clip(shape)
         .background(color)
         .border(1.dp, AppColors.GlassBorder, shape)
@@ -133,7 +135,7 @@ fun ScreenScaffold(
             }
             Text(
                 title.orEmpty(),
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineMedium,
                 color = AppColors.TextPrimary,
                 modifier = Modifier.weight(1f),
             )

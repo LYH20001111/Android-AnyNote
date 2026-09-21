@@ -14,21 +14,29 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyanchor.anynote.data.entity.Priority
 import com.skyanchor.anynote.ui.theme.AppColors
@@ -114,6 +122,7 @@ fun FloatingActionButton(
 ) {
     Box(
         modifier
+            .shadow(14.dp, CircleShape, clip = false, ambientColor = AppColors.Primary.copy(alpha = 0.42f), spotColor = AppColors.Primary.copy(alpha = 0.42f))
             .size(58.dp)
             .clip(CircleShape)
             .background(AppColors.Primary)
@@ -129,21 +138,29 @@ fun FilterChip(
     label: String,
     selected: Boolean,
     modifier: Modifier = Modifier,
+    accent: Color = AppColors.Primary,
+    container: Color = AppColors.PrimarySoft,
     onClick: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(11.dp)
+    val shape = RoundedCornerShape(12.dp)
+    val typography = MaterialTheme.typography
     Box(
         modifier
             .clip(shape)
-            .background(if (selected) AppColors.Primary else AppColors.Glass)
-            .border(1.dp, if (selected) AppColors.Primary else AppColors.GlassBorder, shape)
+            .background(if (selected) container else container.copy(alpha = 0.55f))
+            .then(if (selected) Modifier.background(accent.copy(alpha = 0.13f)) else Modifier)
+            .border(1.2.dp, if (selected) accent else AppColors.GlassBorder, shape)
             .noRippleClickable(onClick)
-            .padding(horizontal = 15.dp, vertical = 8.dp)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
     ) {
         Text(
             label,
-            style = MaterialTheme.typography.labelMedium,
-            color = if (selected) AppColors.OnPrimary else AppColors.TextSecondary,
+            style = if (selected) {
+                typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+            } else {
+                typography.labelMedium
+            },
+            color = accent,
         )
     }
 }
@@ -192,39 +209,44 @@ fun SearchField(
     modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit,
 ) {
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(18.dp)
+    val textStyle = MaterialTheme.typography.bodyMedium
+    var focused by remember { mutableStateOf(false) }
     Row(
         modifier
+            .shadow(8.dp, shape, clip = false, ambientColor = AppColors.Shadow, spotColor = AppColors.Shadow)
             .clip(shape)
             .background(AppColors.Glass)
             .border(1.dp, AppColors.GlassBorder, shape)
-            .padding(horizontal = 14.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(AppIcons.Search, null, tint = AppColors.TextTertiary, modifier = Modifier.size(18.dp))
+        Icon(AppIcons.Search, null, tint = AppColors.TextTertiary, modifier = Modifier.size(19.dp))
         Spacer(Modifier.width(10.dp))
-        androidx.compose.foundation.layout.Box(Modifier.weight(1f)) {
-            if (value.isEmpty()) {
-                Text(placeholder, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextTertiary)
+        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+            if (value.isEmpty() && !focused) {
+                Text(
+                    placeholder,
+                    style = textStyle,
+                    color = AppColors.TextTertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
-            TextField(
+            BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { focused = it.isFocused },
                 singleLine = true,
+                textStyle = textStyle.copy(color = AppColors.TextPrimary),
+                cursorBrush = SolidColor(AppColors.Primary),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                textStyle = MaterialTheme.typography.bodyMedium.copy(color = AppColors.TextPrimary),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = AppColors.Primary,
-                ),
-                modifier = Modifier.fillMaxWidth(),
             )
         }
         if (value.isNotEmpty()) {
+            Spacer(Modifier.width(8.dp))
             IconCircleButton(AppIcons.Close, "清空", size = 30, tint = AppColors.TextTertiary) { onValueChange("") }
         }
     }
@@ -335,15 +357,31 @@ fun AppSwitch(checked: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier 
 }
 
 @Composable
-fun TagPill(text: String, modifier: Modifier = Modifier, tint: Color = AppColors.Primary) {
-    val shape = RoundedCornerShape(8.dp)
-    Box(
+fun TagPill(
+    text: String,
+    modifier: Modifier = Modifier,
+    tint: Color = AppColors.Primary,
+    icon: ImageVector? = null,
+) {
+    val shape = RoundedCornerShape(9.dp)
+    Row(
         modifier
             .clip(shape)
             .background(tint.copy(alpha = 0.12f))
-            .padding(horizontal = 8.dp, vertical = 3.dp)
+            .padding(horizontal = 9.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text, style = MaterialTheme.typography.labelSmall, color = tint)
+        if (icon != null) {
+            Icon(icon, null, tint = tint, modifier = Modifier.size(12.dp))
+            Spacer(Modifier.width(4.dp))
+        }
+        Text(
+            text,
+            style = MaterialTheme.typography.labelSmall,
+            color = tint,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
