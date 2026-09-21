@@ -83,13 +83,7 @@ fun CalendarScreen(env: AppEnv) {
     }
 
     ScreenScaffold(
-        title = "日历",
-        actions = {
-            TextAction("今天") {
-                month = YearMonth.now()
-                selected = LocalDate.now()
-            }
-        },
+        hideTitleBar = true,
         bottomBar = { BottomTabBar(Tab.Calendar) { env.router.selectTab(it) } },
         floatingActionButton = {
             FloatingActionButton { env.router.push(Route.Editor(null, null)) }
@@ -106,6 +100,10 @@ fun CalendarScreen(env: AppEnv) {
                 onPrev = { month = month.minusMonths(1) },
                 onNext = { month = month.plusMonths(1) },
                 onJump = { showJump = true },
+                onToday = {
+                    month = YearMonth.now()
+                    selected = LocalDate.now()
+                },
             )
             Spacer(Modifier.height(10.dp))
             // 网格高度随月份周数变化（最多 6 周），整页可滚动避免下方内容被裁切。
@@ -201,6 +199,7 @@ private fun MonthHeader(
     onPrev: () -> Unit,
     onNext: () -> Unit,
     onJump: () -> Unit,
+    onToday: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Chevron(AppIcons.ChevronLeft, "上一月", onPrev)
@@ -218,15 +217,10 @@ private fun MonthHeader(
                 style = MaterialTheme.typography.titleLarge,
                 color = AppColors.TextPrimary,
             )
-            Spacer(Modifier.width(4.dp))
-            Icon(
-                AppIcons.ChevronDown,
-                "快速跳转",
-                tint = AppColors.TextTertiary,
-                modifier = Modifier.size(18.dp),
-            )
         }
         Chevron(AppIcons.ChevronRight, "下一月", onNext)
+        Spacer(Modifier.width(6.dp))
+        TextAction("今天", onClick = onToday)
     }
 }
 

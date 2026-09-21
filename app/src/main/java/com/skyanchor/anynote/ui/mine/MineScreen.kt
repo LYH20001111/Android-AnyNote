@@ -76,7 +76,7 @@ fun MineScreen(env: AppEnv) {
     var notificationsOn by remember { mutableStateOf(settings.notificationsEnabled) }
 
     ScreenScaffold(
-        title = "我的",
+        hideTitleBar = true,
         bottomBar = { BottomTabBar(Tab.Mine) { env.router.selectTab(it) } },
     ) { padding ->
         Column(

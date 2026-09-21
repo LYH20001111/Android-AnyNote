@@ -34,7 +34,6 @@ import com.skyanchor.anynote.ui.components.EmptyState
 import com.skyanchor.anynote.ui.components.FilterChip
 import com.skyanchor.anynote.ui.components.FloatingActionButton
 import com.skyanchor.anynote.ui.components.GroupLabel
-import com.skyanchor.anynote.ui.components.IconCircleButton
 import com.skyanchor.anynote.ui.components.NoteRow
 import com.skyanchor.anynote.ui.components.ScreenScaffold
 import com.skyanchor.anynote.ui.components.SearchField
@@ -57,12 +56,7 @@ fun HomeScreen(env: AppEnv) {
     ) { repo.homeCards(query, folderId) }
 
     ScreenScaffold(
-        title = "随记",
-        actions = {
-            IconCircleButton(AppIcons.Calendar, "日历", size = 44, tint = AppColors.TextPrimary) {
-                env.router.selectTab(Tab.Calendar)
-            }
-        },
+        hideTitleBar = true,
         bottomBar = { BottomTabBar(Tab.Home) { env.router.selectTab(it) } },
         floatingActionButton = {
             FloatingActionButton { env.router.push(Route.Editor(null, folderId)) }

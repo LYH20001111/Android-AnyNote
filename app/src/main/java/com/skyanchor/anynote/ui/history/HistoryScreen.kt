@@ -83,7 +83,7 @@ fun HistoryScreen(env: AppEnv) {
     }
 
     ScreenScaffold(
-        title = "历史",
+        hideTitleBar = true,
         bottomBar = { BottomTabBar(Tab.History) { env.router.selectTab(it) } },
     ) { padding ->
         Column(

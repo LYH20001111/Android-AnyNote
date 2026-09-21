@@ -116,32 +116,36 @@ fun ScreenScaffold(
     modifier: Modifier = Modifier,
     title: String? = null,
     onBack: (() -> Unit)? = null,
+    hideTitleBar: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(horizontal = 0.dp),
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    Column(modifier.fillMaxSize()) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .height(54.dp)
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (onBack != null) {
-                IconCircleButton(AppIcons.Back, "返回", onClick = onBack)
-                Spacer(Modifier.size(8.dp))
+    Column(modifier.fillMaxSize().statusBarsPadding()) {
+        if (!hideTitleBar) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(54.dp)
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (onBack != null) {
+                    IconCircleButton(AppIcons.Back, "返回", onClick = onBack)
+                    Spacer(Modifier.size(8.dp))
+                }
+                Text(
+                    title.orEmpty(),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = AppColors.TextPrimary,
+                    modifier = Modifier.weight(1f),
+                )
+                actions()
             }
-            Text(
-                title.orEmpty(),
-                style = MaterialTheme.typography.headlineMedium,
-                color = AppColors.TextPrimary,
-                modifier = Modifier.weight(1f),
-            )
-            actions()
+        } else {
+            Spacer(Modifier.height(10.dp))
         }
         Box(Modifier.weight(1f)) {
             content(contentPadding)
