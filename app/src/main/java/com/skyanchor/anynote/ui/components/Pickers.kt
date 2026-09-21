@@ -34,7 +34,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,7 +51,6 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import kotlin.math.abs
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
 
 private val WHEEL_ITEM_HEIGHT = 40.dp
 private const val WHEEL_VISIBLE = 5
@@ -60,8 +58,9 @@ private const val WHEEL_VISIBLE = 5
 /**
  * 单列滚轮选择器：手指拖动 + 惯性滚动，停止后自动对齐到中心；点击任意一项可直接滚过去。
  *
- * 滚轮与外部 [value] 是双向的，但必须避免"滚动 → 改状态 → 又回滚滚轮"的自激：
- * [lastEmitted] 记录最近一次由滚轮自己发出的值，只有外部改动与它不一致时才反向滚动。
+ * 滚轮与外部 [value] 是双向的：用户滚动结束后才回传落点；外部改动则动画滚过去。
+ * 程序化滚动（[programmaticScroll]）期间不回传途经的中间位置——否则中间值会反过来
+ * 改写外部状态、打断本次动画，导致快捷按钮（如"明早9点"）要连点多次才能到位。
  */
 @Composable
 private fun WheelPicker(
@@ -74,7 +73,7 @@ private fun WheelPicker(
     val initialIndex = value.coerceIn(0, maxValue)
     val listState = remember { LazyListState(initialIndex) }
     val lastEmitted = remember { mutableIntStateOf(initialIndex) }
-    val scope = rememberCoroutineScope()
+    var programmaticScroll by remember { mutableStateOf(false) }
     val half = WHEEL_VISIBLE / 2
 
     val nearestIndex by remember {
@@ -104,7 +103,8 @@ private fun WheelPicker(
             }
     }
 
-    LaunchedEffect(nearestIndex) {
+    LaunchedEffect(nearestIndex, programmaticScroll) {
+        if (programmaticScroll) return@LaunchedEffect
         val settled = nearestIndex.coerceIn(0, maxValue)
         if (settled != lastEmitted.intValue) {
             lastEmitted.intValue = settled
@@ -113,11 +113,16 @@ private fun WheelPicker(
     }
 
     LaunchedEffect(value) {
-        if (value != lastEmitted.intValue) {
-            lastEmitted.intValue = value.coerceIn(0, maxValue)
-            // 用独立 scope 滚动：animateScrollToItem 期间 value 会跟随滚动逐帧变化，
-            // 若挂在 LaunchedEffect(value) 上会被自己取消，滚不到目标。
-            scope.launch { listState.animateScrollToItem(lastEmitted.intValue) }
+        val target = value.coerceIn(0, maxValue)
+        if (target == lastEmitted.intValue) return@LaunchedEffect
+        lastEmitted.intValue = target
+        // 动画期间不回传中间位置；若被用户手势打断，落点由上面的效果在
+        // programmaticScroll 翻回 false 后同步给外部。
+        programmaticScroll = true
+        try {
+            listState.animateScrollToItem(target)
+        } finally {
+            programmaticScroll = false
         }
     }
 
@@ -151,7 +156,7 @@ private fun WheelPicker(
                         Modifier
                             .fillMaxWidth()
                             .height(WHEEL_ITEM_HEIGHT)
-                            .clickable { scope.launch { listState.animateScrollToItem(index) } },
+                            .clickable { onValueChange(index) },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
