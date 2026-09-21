@@ -1,6 +1,5 @@
 package com.skyanchor.anynote.ui.mine
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +44,7 @@ import com.skyanchor.anynote.ui.components.SectionHeader
 import com.skyanchor.anynote.ui.components.SectionSpacer
 import com.skyanchor.anynote.ui.components.SettingRow
 import com.skyanchor.anynote.ui.components.SpacerHeight
+import com.skyanchor.anynote.ui.components.TagPill
 import com.skyanchor.anynote.ui.loadAsync
 import com.skyanchor.anynote.ui.settings.ChoiceDialog
 import com.skyanchor.anynote.ui.theme.AppColors
@@ -89,29 +90,44 @@ fun MineScreen(env: AppEnv) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         Modifier
-                            .size(52.dp)
+                            .size(54.dp)
                             .clip(CircleShape)
-                            .background(AppColors.Primary),
+                            .background(AppColors.PrimarySoft),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(AppIcons.Bell, null, tint = AppColors.OnPrimary, modifier = Modifier.size(24.dp))
+                        Icon(AppIcons.Person, null, tint = AppColors.Primary, modifier = Modifier.size(28.dp))
                     }
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("随记", style = MaterialTheme.typography.titleLarge, color = AppColors.TextPrimary)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                "随记用户",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = AppColors.TextPrimary,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            TagPill("本地", tint = AppColors.Warning, icon = AppIcons.Lock)
+                        }
+                        SpacerHeight(3)
                         Text(
-                            "让重要的事，不再被遗忘",
+                            "本机 ID: ${settings.localInstanceId}",
                             style = MaterialTheme.typography.bodySmall,
                             color = AppColors.TextTertiary,
                         )
                     }
                 }
-                SpacerHeight(16)
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    StatCell("待处理", stats.value?.pending, AppColors.Primary)
-                    StatCell("进行中", stats.value?.active, AppColors.TextPrimary)
-                    StatCell("已完成", stats.value?.completed, AppColors.Success)
-                    StatCell("回收站", stats.value?.trashed, AppColors.TextTertiary)
+                SpacerHeight(14)
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(AppColors.Hairline)
+                        .padding(vertical = 12.dp),
+                ) {
+                    StatCell("待处理", stats.value?.pending, AppColors.Primary, Modifier.weight(1f))
+                    StatCell("进行中", stats.value?.active, AppColors.TextPrimary, Modifier.weight(1f))
+                    StatCell("已完成", stats.value?.completed, AppColors.Success, Modifier.weight(1f))
+                    StatCell("回收站", stats.value?.trashed, AppColors.TextTertiary, Modifier.weight(1f))
                 }
             }
 
@@ -168,10 +184,9 @@ fun MineScreen(env: AppEnv) {
                 )
                 Hairline(Modifier.padding(horizontal = 16.dp))
                 SettingRow(
-                    AppIcons.Inbox,
-                    "回收站",
+                    AppIcons.DeleteOutline,
+                    "回收站（${stats.value?.trashed ?: 0}）",
                     subtitle = "删除的备忘录会保留在这里，不会自动清理",
-                    value = "${stats.value?.trashed ?: 0}",
                     onClick = { env.router.push(Route.Trash) },
                 )
             }
@@ -221,8 +236,8 @@ fun MineScreen(env: AppEnv) {
 }
 
 @Composable
-private fun StatCell(label: String, value: Int?, tint: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+private fun StatCell(label: String, value: Int?, tint: Color, modifier: Modifier = Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             value?.toString() ?: "–",
             style = MaterialTheme.typography.headlineSmall,

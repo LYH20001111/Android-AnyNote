@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.skyanchor.anynote.data.entity.CompletionMode
 import com.skyanchor.anynote.data.entity.Priority
+import java.util.UUID
 
 /** 设置页的默认行为与通知偏好（基线 §20）。 */
 class SettingsStore(context: Context) {
@@ -76,6 +77,14 @@ class SettingsStore(context: Context) {
         get() = prefs.getBoolean(KEY_BACKGROUND_HINT, false)
         set(value) = prefs.edit().putBoolean(KEY_BACKGROUND_HINT, value).apply()
 
+    /** 本机实例标识，仅用于「我的」页面区分设备，首次读取时生成后不再变化；与任何网络账号无关。 */
+    val localInstanceId: String
+        get() = prefs.getString(KEY_LOCAL_INSTANCE_ID, null) ?: run {
+            val generated = UUID.randomUUID().toString().replace("-", "").take(8).uppercase()
+            prefs.edit().putString(KEY_LOCAL_INSTANCE_ID, generated).apply()
+            generated
+        }
+
     companion object {
         val SNOOZE_PRESETS = listOf(10, 30, 60)
         val GRACE_PRESETS = listOf(1, 6, 12, 24, 48)
@@ -93,5 +102,6 @@ class SettingsStore(context: Context) {
         private const val KEY_PREFER_ALARM_CLOCK = "prefer_alarm_clock"
         private const val KEY_MISSED_GRACE = "missed_grace_hours"
         private const val KEY_BACKGROUND_HINT = "background_hint_shown"
+        private const val KEY_LOCAL_INSTANCE_ID = "local_instance_id"
     }
 }
