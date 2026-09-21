@@ -9,12 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +36,7 @@ import com.skyanchor.anynote.ui.Route
 import com.skyanchor.anynote.ui.Tab
 import com.skyanchor.anynote.ui.components.AppIcons
 import com.skyanchor.anynote.ui.components.BottomTabBar
+import com.skyanchor.anynote.ui.components.CategoryTile
 import com.skyanchor.anynote.ui.components.EmptyState
 import com.skyanchor.anynote.ui.components.FilterChip
 import com.skyanchor.anynote.ui.components.GlassCard
@@ -46,8 +45,10 @@ import com.skyanchor.anynote.ui.components.SearchField
 import com.skyanchor.anynote.ui.components.SegmentedTabs
 import com.skyanchor.anynote.ui.components.SpacerHeight
 import com.skyanchor.anynote.ui.components.TagPill
+import com.skyanchor.anynote.ui.components.folderIcon
 import com.skyanchor.anynote.ui.loadAsync
 import com.skyanchor.anynote.ui.theme.AppColors
+import com.skyanchor.anynote.ui.theme.CategoryPalette
 import java.time.LocalDate
 
 private enum class HistoryTab(val label: String, val statuses: List<OccurrenceStatus>) {
@@ -106,7 +107,13 @@ fun HistoryScreen(env: AppEnv) {
                     FilterChip("全部分类", folderId == null) { folderId = null }
                 }
                 items(folders.value, key = { it.id }) { folder ->
-                    FilterChip(folder.name, folder.id == folderId, modifier = Modifier.padding(end = 0.dp)) {
+                    FilterChip(
+                        folder.name,
+                        folder.id == folderId,
+                        modifier = Modifier.padding(end = 0.dp),
+                        accent = CategoryPalette.accent(folder.colorKey),
+                        container = CategoryPalette.container(folder.colorKey),
+                    ) {
                         folderId = if (folderId == folder.id) null else folder.id
                     }
                 }
@@ -155,39 +162,43 @@ private data class HistoryKey(
 
 @Composable
 private fun HistoryRow(card: NoteCard, occurrence: ReminderOccurrence, onClick: () -> Unit) {
-    val (tint, label) = when (occurrence.status) {
-        OccurrenceStatus.COMPLETED -> AppColors.Success to "已完成"
-        OccurrenceStatus.SKIPPED -> AppColors.Warning to "已跳过"
-        OccurrenceStatus.EXPIRED -> AppColors.Danger to "已逾期"
-        OccurrenceStatus.CANCELLED -> AppColors.TextTertiary to "已取消"
-        else -> AppColors.TextSecondary to occurrence.status.storage
+    val folder = card.folder
+    val colorKey = folder?.colorKey ?: folder?.iconKey
+    val accent = CategoryPalette.accent(colorKey)
+    val (tint, label, statusIcon) = when (occurrence.status) {
+        OccurrenceStatus.COMPLETED -> Triple(AppColors.Success, "已完成", AppIcons.Check)
+        OccurrenceStatus.SKIPPED -> Triple(AppColors.Warning, "已跳过", AppIcons.SkipNext)
+        OccurrenceStatus.EXPIRED -> Triple(AppColors.Danger, "已逾期", AppIcons.Warning)
+        OccurrenceStatus.CANCELLED -> Triple(AppColors.TextTertiary, "已取消", AppIcons.Close)
+        else -> Triple(AppColors.TextSecondary, occurrence.status.storage, AppIcons.History)
     }
-    GlassCard(Modifier.fillMaxWidth(), corner = 18, contentPadding = PaddingValues(12.dp), onClick = onClick) {
+    GlassCard(Modifier.fillMaxWidth(), corner = 20, contentPadding = PaddingValues(12.dp), onClick = onClick) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                if (occurrence.status == OccurrenceStatus.COMPLETED) AppIcons.DoneAll else AppIcons.History,
-                null,
-                tint = tint,
-                modifier = Modifier.size(17.dp),
-            )
-            Spacer(Modifier.width(10.dp))
+            CategoryTile(colorKey, folderIcon(folder?.iconKey), size = 46, corner = 15)
+            Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
                     card.note.title?.takeIf { it.isNotBlank() }
                         ?: card.note.body.lineSequence().firstOrNull()?.take(24)
                         ?: "备忘录",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = AppColors.TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    timeOnlyText(toLocal(occurrence.completedAt ?: occurrence.effectiveAt).toLocalTime()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AppColors.TextTertiary,
-                )
+                folder?.let {
+                    Spacer(Modifier.height(6.dp))
+                    TagPill(it.name, tint = accent)
+                }
             }
-            TagPill(label, tint = tint)
+            Spacer(Modifier.width(10.dp))
+            Text(
+                timeOnlyText(toLocal(occurrence.completedAt ?: occurrence.effectiveAt).toLocalTime()),
+                style = MaterialTheme.typography.bodySmall,
+                color = AppColors.TextTertiary,
+            )
+            Spacer(Modifier.width(8.dp))
+            TagPill(label, tint = tint, icon = statusIcon)
         }
     }
 }
