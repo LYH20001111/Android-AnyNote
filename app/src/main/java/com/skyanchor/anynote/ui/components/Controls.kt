@@ -187,6 +187,8 @@ fun FilterChip(
     ) {
         Text(
             label,
+            maxLines = 1,
+            softWrap = false,
             style = if (selected) {
                 typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
             } else {

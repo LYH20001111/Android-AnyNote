@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.skyanchor.anynote.data.SettingsStore
 import com.skyanchor.anynote.data.entity.CompletionMode
 import com.skyanchor.anynote.ui.AppEnv
 import com.skyanchor.anynote.ui.Route
@@ -47,6 +46,7 @@ import com.skyanchor.anynote.ui.components.SpacerHeight
 import com.skyanchor.anynote.ui.components.TagPill
 import com.skyanchor.anynote.ui.loadAsync
 import com.skyanchor.anynote.ui.settings.ChoiceDialog
+import com.skyanchor.anynote.ui.settings.SnoozeDurationDialog
 import com.skyanchor.anynote.ui.theme.AppColors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -121,7 +121,6 @@ fun MineScreen(env: AppEnv) {
                     Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(AppColors.Hairline)
                         .padding(vertical = 12.dp),
                 ) {
                     StatCell("待处理", stats.value?.pending, AppColors.Primary, Modifier.weight(1f))
@@ -209,9 +208,8 @@ fun MineScreen(env: AppEnv) {
     }
 
     if (snoozePicker) {
-        ChoiceDialog(
+        SnoozeDurationDialog(
             title = "默认稍后提醒",
-            options = SettingsStore.SNOOZE_PRESETS.map { it to "$it 分钟后" },
             selected = defaultSnooze,
             onDismiss = { snoozePicker = false },
             onPick = { minutes ->

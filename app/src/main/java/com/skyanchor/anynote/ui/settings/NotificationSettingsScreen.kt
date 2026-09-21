@@ -200,10 +200,9 @@ fun NotificationSettingsScreen(env: AppEnv) {
     }
 
     if (snoozePicker) {
-        ChoiceDialog(
+        SnoozeDurationDialog(
             title = "默认稍后提醒",
             text = "只推迟当前这一条提醒事件，不会改动重复规则。",
-            options = SettingsStore.SNOOZE_PRESETS.map { it to "$it 分钟后" },
             selected = snooze,
             onDismiss = { snoozePicker = false },
             onPick = {

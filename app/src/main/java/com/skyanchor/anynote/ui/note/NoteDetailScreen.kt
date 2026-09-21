@@ -34,7 +34,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyanchor.anynote.core.dateTimeText
 import com.skyanchor.anynote.core.listTimeText
-import com.skyanchor.anynote.data.SettingsStore
 import com.skyanchor.anynote.data.entity.Attachment
 import com.skyanchor.anynote.data.entity.AttachmentType
 import com.skyanchor.anynote.data.entity.NoteCard
@@ -59,8 +58,8 @@ import com.skyanchor.anynote.ui.components.TagPill
 import com.skyanchor.anynote.ui.components.TextAction
 import com.skyanchor.anynote.ui.components.TonalButton
 import com.skyanchor.anynote.ui.loadAsync
-import com.skyanchor.anynote.ui.settings.ChoiceDialog
 import com.skyanchor.anynote.ui.settings.ConfirmDialog
+import com.skyanchor.anynote.ui.settings.SnoozeDurationDialog
 import com.skyanchor.anynote.ui.theme.AppColors
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
@@ -306,14 +305,13 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
     }
 
     if (snoozeTarget) {
-        ChoiceDialog(
+        SnoozeDurationDialog(
             title = "稍后提醒",
             text = "只推迟当前这一次，不改变长期重复规则。",
-            options = SettingsStore.SNOOZE_PRESETS.map { it to "$it 分钟后" },
             selected = repo.settings.defaultSnoozeMinutes,
             onDismiss = { snoozeTarget = false },
             onPick = { minutes ->
-                val target = pending.value.firstOrNull() ?: return@ChoiceDialog
+                val target = pending.value.firstOrNull() ?: return@SnoozeDurationDialog
                 runWork(
                     work = { repo.snoozeOccurrence(target.id, minutes) },
                     done = { env.state.invalidate() },
