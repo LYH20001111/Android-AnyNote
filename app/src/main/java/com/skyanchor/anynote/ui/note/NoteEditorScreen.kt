@@ -73,6 +73,7 @@ import com.skyanchor.anynote.ui.reminder.RuleForm
 import com.skyanchor.anynote.ui.reminder.newRule
 import com.skyanchor.anynote.ui.settings.BackgroundRunDialog
 import com.skyanchor.anynote.ui.theme.AppColors
+import com.skyanchor.anynote.ui.theme.CategoryPalette
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -263,7 +264,12 @@ private fun EditorForm(
             FieldLabel("分类")
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(folders, key = { it.id }) { folder ->
-                    FilterChip(folder.name, folder.id == folderId) { folderId = folder.id }
+                    FilterChip(
+                        folder.name,
+                        folder.id == folderId,
+                        accent = CategoryPalette.accent(folder.colorKey),
+                        container = CategoryPalette.container(folder.colorKey),
+                    ) { folderId = folder.id }
                 }
             }
 
