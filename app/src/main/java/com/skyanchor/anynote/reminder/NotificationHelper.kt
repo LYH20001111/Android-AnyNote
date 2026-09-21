@@ -238,7 +238,7 @@ class NotificationHelper(
 
     private fun badgeNotification(count: Int): Notification =
         NotificationCompat.Builder(appContext, CHANNEL_SILENT)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setNumber(count)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setOngoing(true)
