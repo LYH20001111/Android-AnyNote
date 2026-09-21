@@ -259,6 +259,7 @@ fun RuleForm(rule: ReminderRule, onChange: (ReminderRule) -> Unit) {
                 onChange(rule.copy(endDate = picked.toLocalDate()))
                 showEndPicker = false
             },
+            showTime = false,
         )
     }
 }
