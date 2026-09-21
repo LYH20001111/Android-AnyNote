@@ -228,3 +228,14 @@ fun EmptyState(
 fun Hairline(modifier: Modifier = Modifier) {
     Spacer(modifier.fillMaxWidth().height(0.8.dp).background(AppColors.Hairline))
 }
+
+/** 全应用弹窗标题的统一样式：居中、比正文大一号。 */
+@Composable
+fun AppDialogTitle(text: String) {
+    Text(
+        text,
+        modifier = Modifier.fillMaxWidth(),
+        style = MaterialTheme.typography.titleLarge,
+        textAlign = TextAlign.Center,
+    )
+}

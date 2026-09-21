@@ -52,6 +52,7 @@ import com.skyanchor.anynote.data.entity.ReminderRule
 import com.skyanchor.anynote.reminder.RecurrenceEngine
 import com.skyanchor.anynote.ui.AppEnv
 import com.skyanchor.anynote.ui.Route
+import com.skyanchor.anynote.ui.components.AppDialogTitle
 import com.skyanchor.anynote.ui.components.AppIcons
 import com.skyanchor.anynote.ui.components.AttachmentStrip
 import com.skyanchor.anynote.ui.components.AttachmentUi
@@ -449,7 +450,7 @@ private fun RuleFormDialog(
         onDismissRequest = onDismiss,
         confirmButton = { TextAction("完成") { onConfirm(draft) } },
         dismissButton = { TextAction("取消", color = AppColors.TextSecondary, onClick = onDismiss) },
-        title = { Text("提醒设置", style = MaterialTheme.typography.titleMedium) },
+        title = { AppDialogTitle("提醒设置") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 RuleForm(draft) { draft = it }
@@ -464,7 +465,7 @@ private fun AttachmentPreview(item: AttachmentUi, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = { TextAction("关闭", onClick = onDismiss) },
-        title = { Text(item.name, style = MaterialTheme.typography.titleMedium) },
+        title = { AppDialogTitle(item.name) },
         text = {
             Column(
                 Modifier.fillMaxWidth(),

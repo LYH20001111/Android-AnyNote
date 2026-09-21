@@ -100,7 +100,7 @@ fun DateTimePickerDialog(
             TextAction("确定") { onConfirm(LocalDateTime.of(date, LocalTime.of(hour, minute, second))) }
         },
         dismissButton = { TextAction("取消", color = AppColors.TextSecondary, onClick = onDismiss) },
-        title = { Text(title, style = MaterialTheme.typography.titleMedium) },
+        title = { AppDialogTitle(title) },
         text = {
             Column {
                 Row(

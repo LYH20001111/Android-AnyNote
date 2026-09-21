@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.skyanchor.anynote.reminder.DeviceProfiles
+import com.skyanchor.anynote.ui.components.AppDialogTitle
 import com.skyanchor.anynote.ui.components.OptionRow
 import com.skyanchor.anynote.ui.components.TextAction
 import com.skyanchor.anynote.ui.theme.AppColors
@@ -39,7 +40,7 @@ fun ConfirmDialog(
             )
         },
         dismissButton = { TextAction("取消", color = AppColors.TextSecondary, onClick = onDismiss) },
-        title = { Text(title, style = MaterialTheme.typography.titleMedium) },
+        title = { AppDialogTitle(title) },
         text = { Text(text, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary) },
         containerColor = Color.White,
     )
@@ -58,7 +59,7 @@ fun <T> ChoiceDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = { TextAction("关闭", color = AppColors.TextSecondary, onClick = onDismiss) },
-        title = { Text(title, style = MaterialTheme.typography.titleMedium) },
+        title = { AppDialogTitle(title) },
         text = {
             Column {
                 if (text != null) {
@@ -94,7 +95,7 @@ fun TextInputDialog(
             }
         },
         dismissButton = { TextAction("取消", color = AppColors.TextSecondary, onClick = onDismiss) },
-        title = { Text(title, style = MaterialTheme.typography.titleMedium) },
+        title = { AppDialogTitle(title) },
         text = {
             TextField(
                 value = value,
@@ -128,7 +129,7 @@ fun BackgroundRunDialog(onGo: () -> Unit, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         confirmButton = { TextAction("去允许", onClick = onGo) },
         dismissButton = { TextAction("暂不", color = AppColors.TextSecondary, onClick = onDismiss) },
-        title = { Text("让提醒在退出应用后照常响起", style = MaterialTheme.typography.titleMedium) },
+        title = { AppDialogTitle("让提醒在退出应用后照常响起") },
         text = {
             Text(
                 "提醒由系统闹钟负责，随记不需要常驻后台。但若系统把随记列入省电管控，" +
