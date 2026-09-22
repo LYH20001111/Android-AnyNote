@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.skyanchor.anynote.data.db.DefaultFolders
 import com.skyanchor.anynote.data.entity.Folder
@@ -84,7 +85,7 @@ fun FolderManageScreen(env: AppEnv) {
                 .padding(padding)
                 .padding(horizontal = 16.dp),
         ) {
-            InfoBanner("删除分类不会删除备忘录，它们会统一移到「其他」。")
+            InfoBanner("用上下箭头调整分类顺序；删除分类不会删除备忘录，它们会统一移到「其他」。")
             Spacer(Modifier.height(12.dp))
             if (folders.value.isEmpty()) {
                 EmptyState(AppIcons.Folder, "还没有分类", "点右下角 + 新建一个分类")
@@ -94,13 +95,17 @@ fun FolderManageScreen(env: AppEnv) {
                     contentPadding = PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    items(folders.value, key = { it.id }) { folder ->
+                    itemsIndexed(folders.value, key = { _, it -> it.id }) { index, folder ->
                         val count = loadAsync<Int?>(Pair(folder.id, env.state.refreshKey)) {
                             repo.folders.noteCount(folder.id)
                         }
                         FolderRow(
                             folder = folder,
                             count = count.value,
+                            canMoveUp = index > 0,
+                            canMoveDown = index < folders.value.lastIndex &&
+                                folders.value[index + 1].id != DefaultFolders.OTHER,
+                            onMove = { up -> mutate { repo.folders.move(folder.id, up) } },
                             onRename = { dialog = FolderDialog.Rename(folder) },
                             onDelete = { dialog = FolderDialog.Delete(folder, count.value ?: 0) },
                         )
@@ -154,7 +159,15 @@ fun FolderManageScreen(env: AppEnv) {
 }
 
 @Composable
-private fun FolderRow(folder: Folder, count: Int?, onRename: () -> Unit, onDelete: () -> Unit) {
+private fun FolderRow(
+    folder: Folder,
+    count: Int?,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onMove: (up: Boolean) -> Unit,
+    onRename: () -> Unit,
+    onDelete: () -> Unit,
+) {
     val accent = CategoryPalette.accent(folder.colorKey)
     GlassCard(Modifier.fillMaxWidth(), corner = 18, contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -179,6 +192,9 @@ private fun FolderRow(folder: Folder, count: Int?, onRename: () -> Unit, onDelet
             if (folder.id == DefaultFolders.OTHER) {
                 TagPill("兜底", tint = AppColors.TextTertiary)
             } else {
+                MoveArrow(AppIcons.ArrowUp, "上移", enabled = canMoveUp, onClick = { onMove(true) })
+                MoveArrow(AppIcons.ArrowDown, "下移", enabled = canMoveDown, onClick = { onMove(false) })
+                Spacer(Modifier.width(6.dp))
                 TextAction("重命名", onClick = onRename)
                 Icon(
                     AppIcons.Delete,
@@ -192,4 +208,17 @@ private fun FolderRow(folder: Folder, count: Int?, onRename: () -> Unit, onDelet
             }
         }
     }
+}
+
+@Composable
+private fun MoveArrow(icon: ImageVector, contentDescription: String, enabled: Boolean, onClick: () -> Unit) {
+    Icon(
+        icon,
+        contentDescription,
+        tint = if (enabled) AppColors.TextSecondary else AppColors.TextTertiary.copy(alpha = 0.35f),
+        modifier = Modifier
+            .padding(start = 4.dp)
+            .size(20.dp)
+            .then(if (enabled) Modifier.noRippleClickable(onClick) else Modifier),
+    )
 }

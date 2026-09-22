@@ -15,8 +15,8 @@ object DefaultFolders {
     const val OTHER = "folder_other"
 
     val ALL = listOf(
-        Triple(WORK, "工作", "work"),
         Triple(LIFE, "生活", "life"),
+        Triple(WORK, "工作", "work"),
         Triple(FAMILY, "家庭", "family"),
         Triple(STUDY, "学习", "study"),
         Triple(OTHER, "其他", "other"),

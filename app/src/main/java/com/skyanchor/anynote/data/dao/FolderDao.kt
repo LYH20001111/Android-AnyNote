@@ -48,6 +48,35 @@ class FolderDao(private val db: AnyNoteDatabase) {
         )
     }
 
+    /** 调整分类优先级：与相邻分类换位后整体重排 sort_order；兜底「其他」固定末位不可越过。 */
+    fun move(id: String, up: Boolean) {
+        val all = list().toMutableList()
+        val from = all.indexOfFirst { it.id == id }
+        if (from < 0) return
+        val to = if (up) from - 1 else from + 1
+        if (to < 0 || to >= all.size || all[to].id == DefaultFolders.OTHER) return
+        all.add(to, all.removeAt(from))
+        val now = System.currentTimeMillis()
+        db.writableDatabase.apply {
+            beginTransaction()
+            try {
+                all.forEachIndexed { index, folder ->
+                    update(
+                        Schema.FOLDERS,
+                        ContentValues().apply {
+                            put("sort_order", index)
+                            put("updated_at", now)
+                        },
+                        "id = ?", arrayOf(folder.id)
+                    )
+                }
+                setTransactionSuccessful()
+            } finally {
+                endTransaction()
+            }
+        }
+    }
+
     /** 基线 §17：删除分类不删除备忘录，把它们移到"其他"。 */
     fun delete(id: String) {
         if (id == DefaultFolders.OTHER) return

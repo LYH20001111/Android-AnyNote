@@ -178,7 +178,7 @@ fun MineScreen(env: AppEnv) {
                 SettingRow(
                     AppIcons.Folder,
                     "分类管理",
-                    subtitle = "新建、重命名与删除分类",
+                    subtitle = "新建、重命名、删除与排序分类",
                     onClick = { env.router.push(Route.Folders) },
                 )
                 Hairline(Modifier.padding(horizontal = 16.dp))
