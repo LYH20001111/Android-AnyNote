@@ -120,8 +120,9 @@ class AnyNoteRepository(
         }
     }
 
-    fun trashedCards(): List<NoteCard> =
-        notes.query(NoteQuery(status = NoteStatus.TRASHED)).map { cardFor(it) }
+    /** 回收站：按删除时间倒序，可按分类过滤（与首页共用 NoteQuery 的 folder_id 条件）。 */
+    fun trashedCards(folderId: String? = null): List<NoteCard> =
+        notes.query(NoteQuery(status = NoteStatus.TRASHED, folderId = folderId)).map { cardFor(it) }
 
     // endregion
 
@@ -214,8 +215,9 @@ class AnyNoteRepository(
         paths.forEach { path -> runCatching { java.io.File(path).delete() } }
     }
 
-    fun purgeAllTrash() {
-        notes.query(NoteQuery(status = NoteStatus.TRASHED)).map { it.id }.forEach { purge(it) }
+    /** 清空回收站；传 folderId 时只清该分类，与回收站页当前的筛选保持一致。 */
+    fun purgeAllTrash(folderId: String? = null) {
+        notes.query(NoteQuery(status = NoteStatus.TRASHED, folderId = folderId)).map { it.id }.forEach { purge(it) }
     }
 
     fun addAttachment(noteId: String, type: AttachmentType, path: String, name: String, mime: String, size: Long) {
