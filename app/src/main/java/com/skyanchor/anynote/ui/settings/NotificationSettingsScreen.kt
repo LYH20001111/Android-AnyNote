@@ -138,9 +138,6 @@ fun NotificationSettingsScreen(env: AppEnv) {
                 )
             }
             SectionSpacer(18)
-            ReminderSelfCheckSection(env, foreground)
-
-            SectionSpacer(18)
             SectionHeader("提醒表现")
             SectionSpacer(6)
             GlassCard(Modifier.fillMaxWidth(), corner = 20, contentPadding = PaddingValues(vertical = 4.dp)) {
@@ -182,6 +179,9 @@ fun NotificationSettingsScreen(env: AppEnv) {
                     },
                 )
             }
+
+            SectionSpacer(18)
+            ReminderSelfCheckSection(env, foreground)
 
             Spacer(Modifier.height(28.dp))
         }
