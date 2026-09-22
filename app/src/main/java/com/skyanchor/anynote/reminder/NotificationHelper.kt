@@ -223,6 +223,18 @@ class NotificationHelper(
     }
 
     /**
+     * 状态栏里仍挂着的应用自身通知 id，供全量重建对账"通知还在、状态没落库"的事件。
+     * 普通应用调用只会看到自己发的通知（AOSP 自 API 23 起，minSdk 26 内直接可用）。
+     */
+    fun activeReminderIds(): Set<Int> {
+        val nm = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        return runCatching {
+            nm.activeNotifications.filter { it.packageName == appContext.packageName }
+                .mapTo(mutableSetOf()) { it.id }
+        }.getOrDefault(emptySet())
+    }
+
+    /**
      * 取消失败的用户可见后果是"状态已经落库、通知还挂在栏里"，看起来就跟按钮没反应一样，
      * 所以这里绝不能静默吞掉——必须留痕到诊断表（基线 §63）。
      */

@@ -62,6 +62,7 @@ class ReminderScheduler(
     private val reminderDao: ReminderDao,
     private val noteDao: NoteDao,
     private val settings: SettingsStore,
+    private val notifications: NotificationHelper,
 ) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     private val appContext = context.applicationContext
@@ -73,8 +74,13 @@ class ReminderScheduler(
      */
     fun syncAll() {
         val now = System.currentTimeMillis()
-        val expired = reminderDao.expireUnfiredBefore(now - EXPIRE_GRACE_MS)
+        val cutoff = now - EXPIRE_GRACE_MS
+        rescueDelivered(cutoff, now)
+        val doomed = reminderDao.unfiredExpiredCandidates(cutoff)
+        val expired = reminderDao.expireUnfiredBefore(cutoff)
         if (expired > 0) {
+            // 归档却不撤通知，留下的就是一条点不动、也关不掉的僵尸通知（基线 §24）
+            doomed.forEach { notifications.cancel(it.notificationId) }
             reminderDao.recordHealth(
                 HealthKind.MISSED_DROPPED.storage,
                 reason = "$expired 条已过补发时效，按过期归档",
@@ -95,6 +101,34 @@ class ReminderScheduler(
         armWatchdog(now)
     }
 
+    /**
+     * 通知还挂在栏里，就说明那一次其实已经触达——多半是进程在 notify() 与状态落库之间被杀。
+     * 把它按"已触达、等待处理"接回待办，而不是当成从未送达直接归档；
+     * 否则用户会看到备忘录凭空变成「无提醒」，通知却还点不动（基线 §24）。
+     */
+    private fun rescueDelivered(cutoff: Long, now: Long) {
+        val active = notifications.activeReminderIds()
+        if (active.isEmpty()) return
+        reminderDao.unfiredExpiredCandidates(cutoff)
+            .filter { it.notificationId in active }
+            .forEach { occurrence ->
+                reminderDao.update(
+                    occurrence.copy(
+                        status = OccurrenceStatus.TRIGGERED,
+                        triggeredAt = occurrence.triggeredAt ?: occurrence.scheduledAt,
+                        updatedAt = now,
+                    )
+                )
+                reminderDao.recordHealth(
+                    HealthKind.MISSED_REDELIVERED.storage,
+                    reason = "通知仍在栏上，该次按已触达接回待处理",
+                    ruleId = occurrence.ruleId,
+                    occurrenceId = occurrence.id,
+                    scheduledAt = occurrence.scheduledAt,
+                )
+            }
+    }
+
     fun syncNote(noteId: String) {
         val now = System.currentTimeMillis()
         if (noteDao.get(noteId)?.status != NoteStatus.ACTIVE) return
@@ -112,7 +146,11 @@ class ReminderScheduler(
      * 会无限循环，历史记录里堆满一模一样的提醒。
      */
     fun syncRule(rule: ReminderRule, now: Long = System.currentTimeMillis()) {
-        reminderDao.scheduledForRule(rule.id).forEach { cancel(it) }
+        reminderDao.scheduledForRule(rule.id).forEach {
+            cancel(it)
+            // 行被删掉后通知就再也无人认领（按钮里的 occurrence id 已失效），必须连带撤销
+            notifications.cancel(it.notificationId)
+        }
         reminderDao.deleteScheduledForRule(rule.id)
 
         val note = noteDao.get(rule.noteId) ?: return

@@ -73,6 +73,41 @@ object RecurrenceEngine {
         return result
     }
 
+    /**
+     * [until] 时刻（含）之前最近的一次触发点，用于"完成已耗尽备忘录"时补记该轮历史。
+     * 与 [occurrences] 同一套求值语义：单次规则绑定创建时区，重复规则按本地墙钟日匹配。
+     */
+    fun lastOccurrence(
+        rule: ReminderRule,
+        until: Instant,
+        zone: ZoneId = ZoneId.systemDefault(),
+    ): Instant? {
+        if (!rule.isEnabled) return null
+
+        val evalZone = if (rule.once) ZoneId.of(rule.timezone) else zone
+        val time = rule.startLocal.toLocalTime()
+        val startDate = rule.startLocal.toLocalDate()
+
+        if (rule.once) {
+            val instant = resolve(startDate, time, evalZone)
+            return if (!instant.isAfter(until)) instant else null
+        }
+
+        val untilDate = LocalDate.ofInstant(until, evalZone)
+        val endDate = rule.endDate
+        var cursor = if (endDate != null && endDate.isBefore(untilDate)) endDate else untilDate
+        var guard = 0
+        while (guard++ < MAX_DAYS) {
+            if (cursor.isBefore(startDate)) break
+            if (matchesDay(rule, cursor)) {
+                val instant = resolve(cursor, time, evalZone)
+                if (!instant.isAfter(until)) return instant
+            }
+            cursor = cursor.minusDays(1)
+        }
+        return null
+    }
+
     /** 该日历日是否是规则的生效日（不含时间判断）。 */
     fun matchesDay(
         rule: ReminderRule,

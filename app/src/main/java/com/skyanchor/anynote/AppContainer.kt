@@ -30,7 +30,7 @@ class AppContainer(context: Context) {
     private val attachmentDao = AttachmentDao(database)
 
     val notifications = NotificationHelper(appContext, reminderDao, settings)
-    val scheduler = ReminderScheduler(appContext, database, reminderDao, noteDao, settings)
+    val scheduler = ReminderScheduler(appContext, database, reminderDao, noteDao, settings, notifications)
     val coordinator = ReminderCoordinator(noteDao, reminderDao, folderDao, settings, scheduler, notifications)
     val repository = AnyNoteRepository(folderDao, noteDao, reminderDao, attachmentDao, settings, scheduler, coordinator)
     val dataBackup = DataBackupManager(appContext, database, scheduler)

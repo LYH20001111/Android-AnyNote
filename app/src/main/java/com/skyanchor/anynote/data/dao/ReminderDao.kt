@@ -84,6 +84,30 @@ class ReminderDao(private val db: AnyNoteDatabase) {
         db.writableDatabase.insert(Schema.OCCURRENCES, null, occurrence.toValues())
     }
 
+    /** 手动完成"已耗尽"备忘录时补记的一次已完成事件：历史与日历都要留痕。 */
+    fun recordManualCompletion(ruleId: String, noteId: String, scheduledAt: Long) {
+        val now = System.currentTimeMillis()
+        insertOccurrence(
+            ReminderOccurrence(
+                id = db.newId(),
+                ruleId = ruleId,
+                noteId = noteId,
+                scheduledAt = scheduledAt,
+                nextAlarmAt = scheduledAt,
+                triggeredAt = null,
+                completedAt = now,
+                status = OccurrenceStatus.COMPLETED,
+                snoozedUntil = null,
+                skippedAt = null,
+                overdueAt = null,
+                notificationId = db.nextNotificationSeq(),
+                autoRepeatCount = 0,
+                createdAt = now,
+                updatedAt = now,
+            )
+        )
+    }
+
     fun getOccurrence(id: String): ReminderOccurrence? = db.readableDatabase.rawQuery(
         "SELECT * FROM reminder_occurrences WHERE id = ?", arrayOf(id)
     ).use { if (it.moveToFirst()) it.toOccurrence() else null }
@@ -222,6 +246,12 @@ class ReminderDao(private val db: AnyNoteDatabase) {
         "SELECT * FROM reminder_occurrences WHERE rule_id = ? AND scheduled_at = ? LIMIT 1",
         arrayOf(ruleId, scheduledAt.toString())
     ).use { if (it.moveToFirst()) it.toOccurrence() else null }
+
+    /** 与 [expireUnfiredBefore] 同一批候选行：归档前调用方要用它撤销残留通知、对账在栏状态。 */
+    fun unfiredExpiredCandidates(cutoff: Long): List<ReminderOccurrence> = db.readableDatabase.rawQuery(
+        "SELECT * FROM reminder_occurrences WHERE status = 'scheduled' AND scheduled_at < ? AND next_alarm_at < ?",
+        arrayOf(cutoff.toString(), cutoff.toString())
+    ).use { c -> buildList { while (c.moveToNext()) add(c.toOccurrence()) } }
 
     /**
      * 计划时间已过却从未触发的事件，标记为已过期，返回被归档的条数。

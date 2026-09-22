@@ -193,7 +193,14 @@ class ReminderCoordinator(
     /** 详情页"完成"：处理该备忘录当前全部待办事件。 */
     fun completeNote(noteId: String) {
         val pending = reminderDao.pendingForNote(noteId)
-        if (pending.isEmpty()) return
+        if (pending.isEmpty()) {
+            // 没有待办也不能直接返回：单次提醒耗尽/过期的备忘录会永远卡在「无提醒」里，
+            // 完成按钮点不动、跳过静默失败，唯一出口只剩回收站。交给 settleNote 判定归档。
+            recordExhaustedCompletion(noteId)
+            settleNote(noteId)
+            notifications.refreshBadge()
+            return
+        }
         // 先把事件全部归档、最后每条规则只重排一次。逐条完成后立刻 syncRule 会把
         // 快照里其余的待办行删掉重建（换新 id），批量操作就永远只能消费掉第一条。
         val ruleIds = pending.map { it.ruleId }.distinct()
@@ -247,6 +254,28 @@ class ReminderCoordinator(
         )
         reminderDao.update(next)
         scheduler.arm(next)
+    }
+
+    /**
+     * 无待办的备忘录被"完成"时，按规则把最后一次触发点补记为一次已完成事件，
+     * 历史（已完成）与日历页因此留下这一轮的痕迹；规则还有下一轮的不在此预支，
+     * 那一轮由正常链路处理。该触发点此前被归档为过期的，改记为已完成——用户已确认事情做完。
+     */
+    private fun recordExhaustedCompletion(noteId: String) {
+        val now = System.currentTimeMillis()
+        val nowInstant = Instant.ofEpochMilli(now)
+        reminderDao.rulesOfNote(noteId).filter { it.isEnabled }.forEach { rule ->
+            if (RecurrenceEngine.nextOccurrence(rule, nowInstant) != null) return@forEach
+            val last = RecurrenceEngine.lastOccurrence(rule, nowInstant) ?: return@forEach
+            val millis = last.toEpochMilli()
+            val existing = reminderDao.occurrenceAt(rule.id, millis)
+            when {
+                existing == null -> reminderDao.recordManualCompletion(rule.id, noteId, millis)
+                existing.status == OccurrenceStatus.EXPIRED -> reminderDao.update(
+                    existing.copy(status = OccurrenceStatus.COMPLETED, completedAt = now, updatedAt = now)
+                )
+            }
+        }
     }
 
     /**

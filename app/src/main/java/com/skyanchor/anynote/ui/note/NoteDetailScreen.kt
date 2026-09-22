@@ -110,6 +110,11 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
     }
 
     val note = card.note
+    // 没有待办、也没有任何规则还有未来触发点：这条备忘录已经"耗尽"，
+    // 完成按钮必须仍然可用（点击归档到历史），否则唯一出口只剩回收站。
+    val nowInstant = Instant.now()
+    val exhausted = pending.value.isEmpty() &&
+        rules.value.none { it.isEnabled && RecurrenceEngine.nextOccurrence(it, nowInstant) != null }
     ScreenScaffold(
         title = card.folder?.name ?: "备忘录",
         onBack = { env.router.pop() },
@@ -161,17 +166,19 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
                             "完成",
                             modifier = Modifier.weight(1f),
                             icon = AppIcons.Check,
-                            enabled = pending.value.isNotEmpty(),
+                            enabled = pending.value.isNotEmpty() || exhausted,
                         ) { runWork(work = { repo.complete(note.id) }, done = { env.state.invalidate() }) }
                         GlassButton(
                             "稍后",
                             modifier = Modifier.weight(1f),
                             icon = AppIcons.Clock,
+                            enabled = pending.value.isNotEmpty(),
                         ) { snoozeTarget = true }
                         GlassButton(
                             "跳过",
                             modifier = Modifier.weight(1f),
                             icon = AppIcons.SkipNext,
+                            enabled = pending.value.isNotEmpty(),
                         ) { runWork(work = { repo.skipCurrent(note.id) }, done = { env.state.invalidate() }) }
                     }
                 }
@@ -183,7 +190,11 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
                 GlassCard(Modifier.fillMaxWidth(), corner = 20) {
                     if (pending.value.isEmpty()) {
                         Text(
-                            if (rules.value.any { it.isEnabled }) "这一轮已经处理完，等下一次触发。" else "没有待处理的事件。",
+                            when {
+                                exhausted -> "没有待处理的事件，也没有未来的触发点。点「完成」可归档到历史。"
+                                rules.value.any { it.isEnabled } -> "这一轮已经处理完，等下一次触发。"
+                                else -> "没有待处理的事件。"
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = AppColors.TextTertiary,
                         )
