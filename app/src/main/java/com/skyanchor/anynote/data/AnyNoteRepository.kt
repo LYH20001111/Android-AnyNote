@@ -1,6 +1,7 @@
 package com.skyanchor.anynote.data
 
 import com.skyanchor.anynote.core.compactDateTimeText
+import com.skyanchor.anynote.data.db.DefaultFolders
 import com.skyanchor.anynote.data.dao.AttachmentDao
 import com.skyanchor.anynote.data.dao.FolderDao
 import com.skyanchor.anynote.data.dao.NoteDao
@@ -255,13 +256,13 @@ class AnyNoteRepository(
      *
      * 刻意复用 [saveNote] —— 也就是用户设置真实提醒时走的同一条路径（写库 → syncNote → arm），
      * 这样"测试提醒没收到"就等价于"真实提醒会没收",而不是另一套只测通知的假绿灯。
-     * 返回计划触达的时刻，供 UI 显示倒计时；null 表示连一个分类都没有。
+     * 返回计划触达的时刻，供 UI 显示倒计时；null 表示内置「其他」分类缺失。
      *
      * 这条备忘录留在列表里由用户自行删除，不做自动清理：多一套生命周期就多一处和真实数据不一致的地方。
      */
     fun scheduleSelfTest(delaySeconds: Long = 35): Long? {
         val zone = ZoneId.systemDefault()
-        val folderId = settings.defaultFolderId ?: folders.list().firstOrNull()?.id ?: return null
+        val folderId = folders.get(DefaultFolders.OTHER)?.id ?: return null
         val startAt = LocalDateTime.now(zone).truncatedTo(ChronoUnit.SECONDS).plusSeconds(delaySeconds)
         val plannedAt = startAt.atZone(zone).toInstant().toEpochMilli()
         val now = System.currentTimeMillis()
