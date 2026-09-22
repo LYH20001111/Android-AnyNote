@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -297,6 +298,7 @@ fun SettingRow(
     tint: Color = AppColors.Primary,
     container: Color = AppColors.PrimarySoft,
     showChevron: Boolean = true,
+    dot: Boolean = false,
     checked: Boolean? = null,
     onCheckedChange: ((Boolean) -> Unit)? = null,
     onClick: (() -> Unit)? = null,
@@ -304,14 +306,26 @@ fun SettingRow(
     var row = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 13.dp)
     if (onClick != null) row = row.noRippleClickable(onClick)
     Row(row, verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            Modifier
-                .size(34.dp)
-                .clip(RoundedCornerShape(11.dp))
-                .background(container),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(icon, null, tint = tint, modifier = Modifier.size(18.dp))
+        Box(Modifier.size(34.dp)) {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(11.dp))
+                    .background(container),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, null, tint = tint, modifier = Modifier.size(18.dp))
+            }
+            if (dot) {
+                Box(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 3.dp, y = (-3).dp)
+                        .size(9.dp)
+                        .clip(CircleShape)
+                        .background(AppColors.Danger),
+                )
+            }
         }
         Spacer(Modifier.width(13.dp))
         Column(Modifier.weight(1f)) {

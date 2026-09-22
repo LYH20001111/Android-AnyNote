@@ -145,7 +145,7 @@ fun NotificationSettingsScreen(env: AppEnv) {
             SectionSpacer(6)
             GlassCard(Modifier.fillMaxWidth(), corner = 20, contentPadding = PaddingValues(vertical = 4.dp)) {
                 SettingRow(
-                    AppIcons.Tune,
+                    AppIcons.VolumeUp,
                     "提醒声音",
                     subtitle = if (sound) "高优先级渠道，带声音与震动" else "静音渠道，只弹出不打扰",
                     checked = sound,
@@ -157,9 +157,10 @@ fun NotificationSettingsScreen(env: AppEnv) {
                 )
                 Hairline(Modifier.padding(horizontal = 16.dp))
                 SettingRow(
-                    AppIcons.Circle,
+                    AppIcons.NoteCard,
                     "应用角标",
                     subtitle = "以一条常驻静默通知承载待处理数量",
+                    dot = badge,
                     checked = badge,
                     showChevron = false,
                     onCheckedChange = {
@@ -170,7 +171,7 @@ fun NotificationSettingsScreen(env: AppEnv) {
                 )
                 Hairline(Modifier.padding(horizontal = 16.dp))
                 SettingRow(
-                    AppIcons.Lock,
+                    AppIcons.PhoneLock,
                     "锁屏显示正文",
                     subtitle = if (preview) "新建备忘录默认展示全文" else "新建备忘录默认只提示「有一条新提醒」",
                     checked = preview,
@@ -179,19 +180,6 @@ fun NotificationSettingsScreen(env: AppEnv) {
                         preview = it
                         settings.defaultPreviewEnabled = it
                     },
-                )
-            }
-
-            SectionSpacer(18)
-            SectionHeader("默认值")
-            SectionSpacer(6)
-            GlassCard(Modifier.fillMaxWidth(), corner = 20, contentPadding = PaddingValues(vertical = 4.dp)) {
-                SettingRow(
-                    AppIcons.Restore,
-                    "默认稍后提醒",
-                    subtitle = "通知上的「稍后」按钮与详情页共用",
-                    value = "$snooze 分钟",
-                    onClick = { snoozePicker = true },
                 )
             }
 
