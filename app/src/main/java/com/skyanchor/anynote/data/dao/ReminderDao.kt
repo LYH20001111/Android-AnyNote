@@ -337,6 +337,7 @@ class ReminderDao(private val db: AnyNoteDatabase) {
 
     /**
      * 日历页：某时间区间内的全部事件（含已完成，用于打点）。
+     * 回收站中备忘录的事件不显示（基线 §16），恢复后自然重新出现。
      *
      * 区间比较必须拆到裸列上：`COALESCE(a, b) >= ?` 左边是表达式、右边是绑定参数，
      * 两者都没有 affinity，SQLite 会按存储类比较——INTEGER 恒小于 TEXT，条件永假，
@@ -344,16 +345,16 @@ class ReminderDao(private val db: AnyNoteDatabase) {
      */
     fun occurrencesBetween(from: Long, to: Long): List<ReminderOccurrence> = db.readableDatabase.rawQuery(
         """
-        SELECT * FROM reminder_occurrences
-        WHERE status != 'cancelled'
-          AND ((snoozed_until IS NULL AND scheduled_at >= ? AND scheduled_at < ?)
-            OR (snoozed_until IS NOT NULL AND snoozed_until >= ? AND snoozed_until < ?))
-        ORDER BY COALESCE(snoozed_until, scheduled_at) ASC
+        SELECT o.* FROM reminder_occurrences o JOIN notes n ON n.id = o.note_id
+        WHERE o.status != 'cancelled' AND n.status != 'trashed'
+          AND ((o.snoozed_until IS NULL AND o.scheduled_at >= ? AND o.scheduled_at < ?)
+            OR (o.snoozed_until IS NOT NULL AND o.snoozed_until >= ? AND o.snoozed_until < ?))
+        ORDER BY COALESCE(o.snoozed_until, o.scheduled_at) ASC
         """.trimIndent(),
         arrayOf(from.toString(), to.toString(), from.toString(), to.toString())
     ).use { c -> buildList { while (c.moveToNext()) add(c.toOccurrence()) } }
 
-    /** 历史页查询（基线 §14）。 */
+    /** 历史页查询（基线 §14）。回收站中备忘录的记录不显示（基线 §16），恢复后自然重新出现。 */
     fun history(
         statuses: List<OccurrenceStatus>,
         text: String?,
@@ -361,7 +362,7 @@ class ReminderDao(private val db: AnyNoteDatabase) {
         from: Long?,
         to: Long?,
     ): List<ReminderOccurrence> {
-        val where = StringBuilder("o.status IN (${statuses.joinToString(",") { "?" }})")
+        val where = StringBuilder("o.status IN (${statuses.joinToString(",") { "?" }}) AND n.status != 'trashed'")
         val args = ArrayList<String>().apply { statuses.forEach { add(it.storage) } }
         text?.trim()?.takeIf { it.isNotEmpty() }?.let {
             where.append(" AND (n.title LIKE ? OR n.body LIKE ?)")

@@ -42,6 +42,7 @@ data class RestoreResult(val notes: Int, val attachments: Int)
 data class DataSummary(
     val notes: Int,
     val trashed: Int,
+    val folders: Int,
     val rules: Int,
     val occurrences: Int,
     val attachments: Int,
@@ -69,6 +70,7 @@ class DataBackupManager(
         DataSummary(
             notes = live.countWhere(Schema.NOTES, "status != 'trashed'"),
             trashed = live.countWhere(Schema.NOTES, "status = 'trashed'"),
+            folders = live.countWhere(Schema.FOLDERS, null),
             rules = live.countWhere(Schema.RULES, null),
             occurrences = live.countWhere(Schema.OCCURRENCES, null),
             attachments = live.countWhere(Schema.ATTACHMENTS, null),

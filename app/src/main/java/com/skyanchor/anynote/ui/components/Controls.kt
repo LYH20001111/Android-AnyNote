@@ -295,6 +295,7 @@ fun SettingRow(
     subtitle: String? = null,
     value: String? = null,
     tint: Color = AppColors.Primary,
+    container: Color = AppColors.PrimarySoft,
     showChevron: Boolean = true,
     checked: Boolean? = null,
     onCheckedChange: ((Boolean) -> Unit)? = null,
@@ -307,7 +308,7 @@ fun SettingRow(
             Modifier
                 .size(34.dp)
                 .clip(RoundedCornerShape(11.dp))
-                .background(AppColors.PrimarySoft),
+                .background(container),
             contentAlignment = Alignment.Center,
         ) {
             Icon(icon, null, tint = tint, modifier = Modifier.size(18.dp))

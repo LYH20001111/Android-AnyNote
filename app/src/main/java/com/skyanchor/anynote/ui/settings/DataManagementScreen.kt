@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +28,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.skyanchor.anynote.core.FileStore
 import com.skyanchor.anynote.core.dateTimeText
@@ -138,29 +142,24 @@ fun DataManagementScreen(env: AppEnv) {
             Spacer(Modifier.height(12.dp))
 
             val data = summary.value
-            GlassCard(Modifier.fillMaxWidth(), corner = 20, contentPadding = PaddingValues(16.dp)) {
-                Text(
-                    "当前数据",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = AppColors.TextSecondary,
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "备忘录 ${data?.notes ?: "—"} 条 · 回收站 ${data?.trashed ?: "—"} 条",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = AppColors.TextPrimary,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    "提醒规则 ${data?.rules ?: "—"} 条 · 提醒事件 ${data?.occurrences ?: "—"} 条",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = AppColors.TextPrimary,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    "附件 ${data?.attachments ?: "—"} 个 · 约 ${data?.attachmentBytes?.let { FileStore.formatSize(it) } ?: "—"}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = AppColors.TextPrimary,
+            SectionHeader("当前数据")
+            SectionSpacer(6)
+            GlassCard(Modifier.fillMaxWidth(), corner = 20, contentPadding = PaddingValues(vertical = 4.dp)) {
+                StatRow(AppIcons.Article, AppColors.Warning, "备忘录", data?.let { "${it.notes} 条" })
+                Hairline(Modifier.padding(horizontal = 16.dp))
+                StatRow(AppIcons.DeleteOutline, AppColors.Danger, "回收站", data?.let { "${it.trashed} 条" })
+                Hairline(Modifier.padding(horizontal = 16.dp))
+                StatRow(AppIcons.GridView, AppColors.Success, "分类", data?.let { "${it.folders} 条" })
+                Hairline(Modifier.padding(horizontal = 16.dp))
+                StatRow(AppIcons.CheckBox, AppColors.Primary, "提醒规则", data?.let { "${it.rules} 条" })
+                Hairline(Modifier.padding(horizontal = 16.dp))
+                StatRow(AppIcons.Bell, AppColors.TextPrimary, "提醒事件", data?.let { "${it.occurrences} 条" })
+                Hairline(Modifier.padding(horizontal = 16.dp))
+                StatRow(
+                    AppIcons.Attach,
+                    AppColors.TextTertiary,
+                    "附件",
+                    data?.let { "${it.attachments} 个 · 约 ${FileStore.formatSize(it.attachmentBytes)}" },
                 )
             }
 
@@ -169,7 +168,7 @@ fun DataManagementScreen(env: AppEnv) {
             SectionSpacer(6)
             GlassCard(Modifier.fillMaxWidth(), corner = 20, contentPadding = PaddingValues(vertical = 4.dp)) {
                 SettingRow(
-                    AppIcons.Archive,
+                    AppIcons.Folder,
                     "本地备份",
                     subtitle = "打包全部数据为 .zip，可选择保存位置",
                     onClick = { if (busy == null) backupLauncher.launch(suggestedBackupName()) },
@@ -179,6 +178,8 @@ fun DataManagementScreen(env: AppEnv) {
                     AppIcons.Restore,
                     "本地恢复",
                     subtitle = "从 .zip 备份还原，可覆盖或合并（按 ID 去重）",
+                    tint = RestorePurple,
+                    container = RestorePurple.copy(alpha = 0.12f),
                     onClick = {
                         if (busy == null) restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream"))
                     },
@@ -194,6 +195,7 @@ fun DataManagementScreen(env: AppEnv) {
                     "清空数据",
                     subtitle = "删除全部备忘录、回收站、提醒与附件文件",
                     tint = AppColors.Danger,
+                    container = AppColors.Danger.copy(alpha = 0.12f),
                     onClick = { if (busy == null) confirmClear = true },
                 )
             }
@@ -267,3 +269,27 @@ fun DataManagementScreen(env: AppEnv) {
 /** SAF 建议文件名：时间戳保证多次备份互不覆盖。 */
 private fun suggestedBackupName(): String =
     "anynote-backup-" + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date()) + ".zip"
+
+/** 「本地恢复」的紫色图标：与备份的蓝色区分，仅本页使用。 */
+private val RestorePurple = Color(0xFF7C5CFC)
+
+/** 「当前数据」统计行：彩色图标 + 名称 + 右侧条数，纯展示无交互。 */
+@Composable
+private fun StatRow(icon: ImageVector, tint: Color, label: String, value: String?) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(13.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = AppColors.TextPrimary,
+            modifier = Modifier.weight(1f),
+        )
+        Text(value ?: "—", style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary)
+    }
+}
