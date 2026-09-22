@@ -40,7 +40,6 @@ import com.skyanchor.anynote.ui.components.GlassCard
 import com.skyanchor.anynote.ui.components.InfoBanner
 import com.skyanchor.anynote.ui.components.ScreenScaffold
 import com.skyanchor.anynote.ui.components.TagPill
-import com.skyanchor.anynote.ui.components.TextAction
 import com.skyanchor.anynote.ui.components.folderIcon
 import com.skyanchor.anynote.ui.components.noRippleClickable
 import com.skyanchor.anynote.ui.loadAsync
@@ -194,8 +193,15 @@ private fun FolderRow(
             } else {
                 MoveArrow(AppIcons.ArrowUp, "上移", enabled = canMoveUp, onClick = { onMove(true) })
                 MoveArrow(AppIcons.ArrowDown, "下移", enabled = canMoveDown, onClick = { onMove(false) })
-                Spacer(Modifier.width(6.dp))
-                TextAction("重命名", onClick = onRename)
+                Icon(
+                    AppIcons.Edit,
+                    "重命名",
+                    tint = AppColors.TextTertiary,
+                    modifier = Modifier
+                        .padding(start = 12.dp)
+                        .size(17.dp)
+                        .noRippleClickable(onRename),
+                )
                 Icon(
                     AppIcons.Delete,
                     "删除分类",
