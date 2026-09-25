@@ -17,8 +17,8 @@ private const val TAG = "AnyNoteReceiver"
 private const val WAKE_LOCK_MS = 60_000L
 
 /**
- * 系统闹钟到点、以及通知上的"完成/稍后提醒/跳过本次"按钮都走这里。
- * 广播接收器不依赖 App 进程存活（基线 §22、§24）。
+ * 系统闹钟到点与看门狗自愈广播走这里。通知按钮由 [ReminderActionReceiver] 单独处理，
+ * 两种广播都能在 App 进程不存在时由系统冷启动投递（基线 §22、§24）。
  */
 class ReminderReceiver : BroadcastReceiver() {
 
@@ -41,16 +41,33 @@ class ReminderReceiver : BroadcastReceiver() {
         }
         when (action) {
             ReminderIntents.ACTION_TRIGGER ->
-                guardedAsync(context, container, "anynote:reminder") { container.coordinator.trigger(occurrenceId) }
-            ReminderIntents.ACTION_COMPLETE ->
-                guardedAsync(context, container, "anynote:reminder") { container.coordinator.complete(occurrenceId) }
-            ReminderIntents.ACTION_SKIP ->
-                guardedAsync(context, container, "anynote:reminder") { container.coordinator.skip(occurrenceId) }
-            ReminderIntents.ACTION_SNOOZE -> {
-                val minutes = intent.getIntExtra(ReminderIntents.EXTRA_SNOOZE_MINUTES, 10)
-                guardedAsync(context, container, "anynote:reminder") { container.coordinator.snooze(occurrenceId, minutes) }
-            }
-            else -> Log.w(TAG, "未知广播动作 $action")
+                guardedAsync(context, container, "anynote:reminder") { container.handleTrigger(occurrenceId) }
+            else -> Log.w(TAG, "ReminderReceiver 收到不支持的动作 $action")
+        }
+    }
+}
+
+class ReminderActionReceiver : BroadcastReceiver() {
+
+    override fun onReceive(context: Context, intent: Intent) {
+        val container = (context.applicationContext as? AnyNoteApp)?.container
+        if (container == null) {
+            Log.w(TAG, "容器未就绪，丢弃通知动作 ${intent.action}")
+            return
+        }
+        val action = intent.action
+        if (action !in setOf(ReminderIntents.ACTION_COMPLETE, ReminderIntents.ACTION_SNOOZE, ReminderIntents.ACTION_SKIP)) {
+            Log.w(TAG, "未知通知动作 $action")
+            return
+        }
+        val occurrenceId = intent.getStringExtra(ReminderIntents.EXTRA_OCCURRENCE_ID)
+        if (occurrenceId == null) {
+            Log.w(TAG, "通知动作 $action 未携带 occurrence id，已丢弃")
+            return
+        }
+        val minutes = intent.getIntExtra(ReminderIntents.EXTRA_SNOOZE_MINUTES, 10).coerceAtLeast(1)
+        guardedAsync(context, container, "anynote:notification-action") {
+            container.handleNotificationAction(action, occurrenceId, minutes)
         }
     }
 }

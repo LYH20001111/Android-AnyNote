@@ -131,11 +131,12 @@ class ReminderCoordinator(
 
     private fun complete(occurrenceId: String, resync: Boolean) {
         val occurrence = reminderDao.getOccurrence(occurrenceId) ?: return
-        if (occurrence.status == OccurrenceStatus.COMPLETED) return
+        if (!isActionable(occurrence)) {
+            notifications.cancel(occurrence.notificationId)
+            return
+        }
         val now = System.currentTimeMillis()
 
-        scheduler.cancel(occurrence)
-        notifications.cancel(occurrence.notificationId)
         reminderDao.update(
             occurrence.copy(
                 status = OccurrenceStatus.COMPLETED,
@@ -143,6 +144,9 @@ class ReminderCoordinator(
                 updatedAt = now,
             )
         )
+        // 先持久化用户结果，再撤通知，避免进程中断时丢失动作结果。
+        scheduler.cancel(occurrence)
+        notifications.cancel(occurrence.notificationId)
         if (!resync) return
 
         val rule = reminderDao.getRule(occurrence.ruleId)
@@ -161,7 +165,10 @@ class ReminderCoordinator(
      */
     fun snooze(occurrenceId: String, minutes: Int) {
         val occurrence = reminderDao.getOccurrence(occurrenceId) ?: return
-        if (occurrence.status == OccurrenceStatus.COMPLETED) return
+        if (!isActionable(occurrence)) {
+            notifications.cancel(occurrence.notificationId)
+            return
+        }
         val at = System.currentTimeMillis() + minutes.coerceAtLeast(1) * 60_000L
         val updated = occurrence.copy(
             status = OccurrenceStatus.SNOOZED,
@@ -169,8 +176,8 @@ class ReminderCoordinator(
             nextAlarmAt = at,
             updatedAt = System.currentTimeMillis(),
         )
-        notifications.cancel(occurrence.notificationId)
         reminderDao.update(updated)
+        notifications.cancel(occurrence.notificationId)
         scheduler.rearm(updated)
         notifications.refreshBadge()
     }
@@ -178,13 +185,16 @@ class ReminderCoordinator(
     /** 跳过本次（基线 §6.4）：本次 skipped，后续重复照常。 */
     fun skip(occurrenceId: String) {
         val occurrence = reminderDao.getOccurrence(occurrenceId) ?: return
-        if (occurrence.status == OccurrenceStatus.COMPLETED) return
+        if (!isActionable(occurrence)) {
+            notifications.cancel(occurrence.notificationId)
+            return
+        }
         val now = System.currentTimeMillis()
-        scheduler.cancel(occurrence)
-        notifications.cancel(occurrence.notificationId)
         reminderDao.update(
             occurrence.copy(status = OccurrenceStatus.SKIPPED, skippedAt = now, updatedAt = now)
         )
+        scheduler.cancel(occurrence)
+        notifications.cancel(occurrence.notificationId)
         reminderDao.getRule(occurrence.ruleId)?.takeIf { it.type.recurring }?.let { scheduler.syncRule(it, now) }
         settleNote(occurrence.noteId)
         notifications.refreshBadge()
@@ -225,6 +235,10 @@ class ReminderCoordinator(
     fun skipCurrent(noteId: String) {
         reminderDao.pendingForNote(noteId).firstOrNull()?.let { skip(it.id) }
     }
+
+    /** 已过期的提醒仍允许通过通知动作补救；其他终态事件视作过期点击。 */
+    private fun isActionable(occurrence: ReminderOccurrence): Boolean =
+        occurrence.pending || occurrence.status == OccurrenceStatus.EXPIRED
 
     /** 结束整个重复系列：停用规则并清掉它所有未触发的事件。 */
     private fun endSeries(ruleId: String) {

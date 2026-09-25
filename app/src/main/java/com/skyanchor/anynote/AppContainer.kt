@@ -36,11 +36,30 @@ class AppContainer(context: Context) {
     val dataBackup = DataBackupManager(appContext, database, scheduler)
 
     /**
+     * 通知按钮动作与冷启动/看门狗重建共用锁，避免并发更新同一提醒导致状态被覆盖。
+     */
+    private val reminderMutationLock = Any()
+
+    fun handleTrigger(occurrenceId: String) = synchronized(reminderMutationLock) {
+        coordinator.trigger(occurrenceId)
+    }
+
+    fun handleNotificationAction(action: String?, occurrenceId: String, snoozeMinutes: Int) =
+        synchronized(reminderMutationLock) {
+            when (action) {
+                com.skyanchor.anynote.reminder.ReminderIntents.ACTION_COMPLETE -> coordinator.complete(occurrenceId)
+                com.skyanchor.anynote.reminder.ReminderIntents.ACTION_SNOOZE -> coordinator.snooze(occurrenceId, snoozeMinutes)
+                com.skyanchor.anynote.reminder.ReminderIntents.ACTION_SKIP -> coordinator.skip(occurrenceId)
+                else -> Unit
+            }
+        }
+
+    /**
      * 冷启动、开机、权限恢复、系统时间变化后的全量重建。
      * 顺序是硬约束：补发必须抢在 [ReminderScheduler.syncAll] 的过期判定之前，
      * 否则那一次会被直接归档，用户连"错过"都不知道。
      */
-    fun resync() {
+    fun resync() = synchronized(reminderMutationLock) {
         repository.resyncAll()
         notifications.refreshBadge()
     }
@@ -55,8 +74,10 @@ class AppContainer(context: Context) {
             if (now - lastSelfHealAt < SELF_HEAL_MIN_INTERVAL_MS) return
             lastSelfHealAt = now
         }
-        coordinator.recoverMissed(now)
-        scheduler.refreshFrontier()
+        synchronized(reminderMutationLock) {
+            coordinator.recoverMissed(now)
+            scheduler.refreshFrontier()
+        }
     }
 
     /**
@@ -71,10 +92,9 @@ class AppContainer(context: Context) {
         )
     }
 
-    /** 冷启动、权限恢复、系统时间变化后，都以数据库为准重建一次调度。 */
+    /** 只做进程级轻量初始化；调度重建由 Activity、开机广播或看门狗显式发起。 */
     fun bootstrap() {
         notifications.ensureChannels()
-        resync()
     }
 
     private companion object {

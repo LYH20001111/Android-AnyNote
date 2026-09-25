@@ -190,8 +190,10 @@ class ReminderDao(private val db: AnyNoteDatabase) {
     fun scheduledForRule(ruleId: String): List<ReminderOccurrence> = db.readableDatabase.rawQuery(
         """
         SELECT * FROM reminder_occurrences
-        WHERE rule_id = ? AND status = 'scheduled' AND overdue_at IS NULL ORDER BY scheduled_at ASC
-        """.trimIndent(), arrayOf(ruleId)
+        WHERE rule_id = ? AND status = 'scheduled' AND overdue_at IS NULL
+          AND next_alarm_at > ?
+        ORDER BY scheduled_at ASC
+        """.trimIndent(), arrayOf(ruleId, System.currentTimeMillis().toString())
     ).use { c -> buildList { while (c.moveToNext()) add(c.toOccurrence()) } }
 
     /** 已排队补发的事件，结束系列/删除规则时必须连带取消。 */
@@ -215,8 +217,8 @@ class ReminderDao(private val db: AnyNoteDatabase) {
     fun deleteScheduledForRule(ruleId: String) {
         db.writableDatabase.delete(
             Schema.OCCURRENCES,
-            "rule_id = ? AND status = 'scheduled' AND overdue_at IS NULL",
-            arrayOf(ruleId),
+            "rule_id = ? AND status = 'scheduled' AND overdue_at IS NULL AND next_alarm_at > ?",
+            arrayOf(ruleId, System.currentTimeMillis().toString()),
         )
     }
 

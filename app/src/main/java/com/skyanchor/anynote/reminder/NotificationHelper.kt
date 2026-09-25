@@ -293,9 +293,10 @@ class NotificationHelper(
         // 必须显式指定组件：Android 8+ 起隐式广播只投递给进程还活着的应用，
         // 清后台后点按钮会被系统静默跳过（连日志都没有），三个动作按钮因此全部失效。
         // 闹钟链路靠显式组件才能冷启动进程收广播，这里同理。
-        Intent(appContext, ReminderReceiver::class.java).apply {
+        Intent(appContext, ReminderActionReceiver::class.java).apply {
             this.action = action
-            data = Uri.parse("anynote://reminder/$occurrenceId")
+            // 动作类型也进入 PendingIntent 身份，避免系统复用其他按钮的旧令牌。
+            data = Uri.parse("anynote://reminder/$occurrenceId/${action.substringAfterLast('.')}")
             putExtra(ReminderIntents.EXTRA_OCCURRENCE_ID, occurrenceId)
             putExtra(ReminderIntents.EXTRA_NOTE_ID, noteId)
             if (snoozeMinutes > 0) putExtra(ReminderIntents.EXTRA_SNOOZE_MINUTES, snoozeMinutes)
