@@ -34,8 +34,10 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.ui.theme.AppColors
 
 @Composable
@@ -133,7 +135,7 @@ fun ScreenScaffold(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (onBack != null) {
-                    IconCircleButton(AppIcons.Back, "返回", onClick = onBack)
+                    IconCircleButton(AppIcons.Back, stringResource(R.string.action_back), onClick = onBack)
                     Spacer(Modifier.size(8.dp))
                 }
                 Text(

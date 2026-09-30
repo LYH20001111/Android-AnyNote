@@ -337,9 +337,9 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
 
     if (confirmTrash) {
         ConfirmDialog(
-            title = "移入回收站？",
-            text = "备忘录与它的提醒会停止调度，可在回收站恢复。",
-            confirmLabel = "移入回收站",
+            title = stringResource(R.string.det_trash_confirm_title),
+            text = stringResource(R.string.det_trash_confirm_text),
+            confirmLabel = stringResource(R.string.det_move_to_trash),
             danger = true,
             onDismiss = { confirmTrash = false },
             onConfirm = {
@@ -358,6 +358,7 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
 
 @Composable
 private fun OccurrenceRow(occurrence: ReminderOccurrence, onComplete: () -> Unit, onSkip: () -> Unit) {
+    val context = LocalContext.current
     Column(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -375,24 +376,27 @@ private fun OccurrenceRow(occurrence: ReminderOccurrence, onComplete: () -> Unit
                 )
                 Text(
                     when (occurrence.status) {
-                        OccurrenceStatus.SCHEDULED -> "计划中"
-                        OccurrenceStatus.TRIGGERED -> "已触达，等待处理"
-                        OccurrenceStatus.SNOOZED -> "已推迟到 " +
-                            listTimeText(occurrence.snoozedUntil ?: occurrence.scheduledAt)
+                        OccurrenceStatus.SCHEDULED -> stringResource(R.string.det_status_scheduled)
+                        OccurrenceStatus.TRIGGERED -> stringResource(R.string.det_status_triggered)
+                        OccurrenceStatus.SNOOZED -> stringResource(
+                            R.string.det_status_snoozed,
+                            listTimeText(context, occurrence.snoozedUntil ?: occurrence.scheduledAt),
+                        )
                         else -> occurrence.status.storage
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = AppColors.TextTertiary,
                 )
             }
-            TextAction("完成", color = AppColors.Success) { onComplete() }
-            TextAction("跳过", color = AppColors.Danger, modifier = Modifier.padding(start = 4.dp)) { onSkip() }
+            TextAction(stringResource(R.string.det_complete), color = AppColors.Success) { onComplete() }
+            TextAction(stringResource(R.string.det_skip_short), color = AppColors.Danger, modifier = Modifier.padding(start = 4.dp)) { onSkip() }
         }
     }
 }
 
 @Composable
 private fun RuleRow(rule: ReminderRule, onToggle: (Boolean) -> Unit, onEdit: () -> Unit) {
+    val context = LocalContext.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             if (rule.type.recurring) AppIcons.Repeat else AppIcons.Bell,
@@ -403,7 +407,7 @@ private fun RuleRow(rule: ReminderRule, onToggle: (Boolean) -> Unit, onEdit: () 
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                "${rule.type.label} · ${RecurrenceEngine.describe(rule)}",
+                stringResource(R.string.det_rule_summary, stringResource(rule.type.labelRes), RecurrenceEngine.describe(context, rule)),
                 style = MaterialTheme.typography.bodyMedium,
                 color = AppColors.TextPrimary,
                 maxLines = 2,
@@ -412,15 +416,15 @@ private fun RuleRow(rule: ReminderRule, onToggle: (Boolean) -> Unit, onEdit: () 
             val next = RecurrenceEngine.nextOccurrence(rule, Instant.now())
             Text(
                 when {
-                    !rule.isEnabled -> "已停用"
-                    next != null -> "下次 " + dateTimeText(next.toEpochMilli())
-                    else -> "当前没有未来触发点"
+                    !rule.isEnabled -> stringResource(R.string.det_disabled)
+                    next != null -> stringResource(R.string.det_next, dateTimeText(context, next.toEpochMilli()))
+                    else -> stringResource(R.string.det_no_future_occurrence)
                 },
                 style = MaterialTheme.typography.labelSmall,
                 color = AppColors.TextTertiary,
             )
         }
-        TextAction("编辑", onClick = onEdit)
+        TextAction(stringResource(R.string.action_edit), onClick = onEdit)
         Spacer(Modifier.width(6.dp))
         AppSwitch(rule.isEnabled, onToggle)
     }
@@ -447,13 +451,13 @@ private fun TrashCard(onClick: () -> Unit) {
             Spacer(Modifier.width(13.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    "移入回收站",
+                    stringResource(R.string.det_move_to_trash),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = AppColors.Danger,
                 )
                 Text(
-                    "回收站中的备忘录不再触发提醒",
+                    stringResource(R.string.det_trash_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppColors.Danger.copy(alpha = 0.75f),
                 )

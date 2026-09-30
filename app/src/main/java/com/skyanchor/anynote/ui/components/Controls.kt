@@ -35,10 +35,12 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.data.entity.Priority
 import com.skyanchor.anynote.ui.theme.AppColors
 
@@ -162,7 +164,7 @@ fun FloatingActionButton(
             .noRippleClickable(onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, "新建", tint = AppColors.OnPrimary, modifier = Modifier.size(26.dp))
+        Icon(icon, stringResource(R.string.ctl_new), tint = AppColors.OnPrimary, modifier = Modifier.size(26.dp))
     }
 }
 
@@ -282,7 +284,7 @@ fun SearchField(
         }
         if (value.isNotEmpty()) {
             Spacer(Modifier.width(8.dp))
-            IconCircleButton(AppIcons.Close, "清空", size = 30, tint = AppColors.TextTertiary) { onValueChange("") }
+            IconCircleButton(AppIcons.Close, stringResource(R.string.action_clear), size = 30, tint = AppColors.TextTertiary) { onValueChange("") }
         }
     }
 }
