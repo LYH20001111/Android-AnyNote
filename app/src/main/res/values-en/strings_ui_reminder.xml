@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===== Reminder rule editor screen (ReminderRuleEditorScreen, re_) ===== -->
+    <string name="re_screen_title">Reminder Settings</string>
+    <string name="re_add_reminder">Add Reminder</string>
+    <string name="re_saving">Saving…</string>
+    <string name="re_preview">Preview: %1$s</string>
+    <string name="re_save_this_reminder">Save This Reminder</string>
+    <string name="re_rule_change_note">Changing a rule cancels the old alarm and re-registers it with the new rule (baseline §23); occurrences already delivered or snoozed stay unchanged.</string>
+    <string name="re_delete_confirm_title">Delete this reminder?</string>
+    <string name="re_delete_confirm_text">It will be removed together with its reminder events that have not fired yet.</string>
+
+    <!-- ===== Reminder rule form (RuleForm, rf_) ===== -->
+    <string name="rf_repeat_type">Repeat type</string>
+    <string name="rf_reminder_time">Reminder time</string>
+    <string name="rf_first_reminder_time">First reminder / time</string>
+    <string name="rf_select_weekdays">Select weekdays</string>
+    <string name="rf_monthly_day_label">Day of month (falls back to the last day when the month has none)</string>
+    <string name="rf_month">Month</string>
+    <string name="rf_day">Day</string>
+    <string name="rf_interval">Interval</string>
+    <string name="rf_every_unit">Every %1$s</string>
+    <string name="rf_set_end_date">Set end date</string>
+    <string name="rf_end_until">Until %1$s</string>
+    <string name="rf_no_end_date">No end date</string>
+    <string name="rf_completion_mode">Completion mode</string>
+    <string name="rf_mode_continue">This occurrence</string>
+    <string name="rf_mode_end_series">End series</string>
+    <string name="rf_auto_re_remind">Re-remind when unhandled</string>
+    <string name="rf_auto_re_remind_desc">Reminds again at a fixed interval while the notification stays; affects only this occurrence</string>
+    <string name="rf_re_remind_interval">Re-remind interval</string>
+    <string name="rf_minutes">%1$d min</string>
+    <string name="rf_max_repeats">Max repeats</string>
+    <string name="rf_unlimited">Unlimited</string>
+    <string name="rf_times">%1$d times</string>
+    <string name="rf_enable_rule">Enable this rule</string>
+    <string name="rf_recurring_zone_note">Repeating reminders fire by the device\'s current clock time, so after crossing time zones they still fire at the local time.</string>
+    <string name="rf_once_zone_note">A one-time reminder is pinned to the time zone it was chosen in (%1$s); its absolute moment does not change when the time zone changes.</string>
+    <string name="rf_pick_reminder_time">Choose reminder time</string>
+    <string name="rf_pick_end_date">Choose end date</string>
+    <string name="rf_date_ymd">%1$d-%2$d-%3$d</string>
+    <string name="rf_day_end_of_month">31 (End of month)</string>
+    <string name="rf_weekly_hint">Repeats weekly on %1$s</string>
+    <string name="rf_monthly_hint">Defaults to repeating monthly on day %1$d</string>
+    <string name="rf_yearly_hint">Defaults to repeating yearly on %1$d/%2$d</string>
+    <string name="rf_hint_from_start">Starts from the selected date and time</string>
+</resources>

@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.FileStore
 import com.skyanchor.anynote.data.db.AnyNoteDatabase
 import com.skyanchor.anynote.data.db.Schema
@@ -106,7 +107,7 @@ class DataBackupManager(
         // TRUNCATE 检查点把 WAL 回写进主库文件，之后单拷 anynote.db 即自洽
         writable.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null).use { it.moveToFirst() }
         val dbFile = appContext.getDatabasePath(Schema.DATABASE_NAME)
-        require(dbFile.exists()) { "数据库文件尚未生成，请先打开过一次应用" }
+        require(dbFile.exists()) { appContext.getString(R.string.backup_error_db_missing) }
         val attachmentFiles = FileStore.attachmentsDir(appContext)
             .listFiles()?.filter { it.isFile } ?: emptyList()
         var entries = 0
@@ -156,7 +157,7 @@ class DataBackupManager(
                     zip.closeEntry()
                     entry = zip.nextEntry
                 }
-                found ?: throw IllegalArgumentException("这不是有效的随记备份文件")
+                found ?: throw IllegalArgumentException(appContext.getString(R.string.backup_error_invalid_file))
             }
         }
         return parseManifest(JSONObject(json))
@@ -189,8 +190,8 @@ class DataBackupManager(
                 }
             }
             val manifest = manifestText?.let(::JSONObject)
-                ?: throw IllegalArgumentException("这不是有效的随记备份文件")
-            require(manifest.optInt("format") == FORMAT_VERSION) { "不支持的备份格式版本" }
+                ?: throw IllegalArgumentException(appContext.getString(R.string.backup_error_invalid_file))
+            require(manifest.optInt("format") == FORMAT_VERSION) { appContext.getString(R.string.backup_error_unsupported_format) }
 
             // 读写打开：WAL 模式的库只读打开会因缺少 -shm/-wal 而失败；
             // 解出的副本在 cacheDir，允许它自建辅助文件，随工作目录一起删除。
@@ -199,7 +200,7 @@ class DataBackupManager(
             )
             backup.use {
                 TABLE_ORDER.forEach { table ->
-                    require(it.hasTable(table)) { "备份数据库缺少表 $table，文件可能已损坏" }
+                    require(it.hasTable(table)) { appContext.getString(R.string.backup_error_missing_table, table) }
                 }
                 return restoreTables(backup, attachSrcDir, mode)
             }
@@ -350,18 +351,18 @@ class DataBackupManager(
 
     private fun openOutputStream(target: Uri): OutputStream =
         appContext.contentResolver.openOutputStream(target, "w")
-            ?: throw IllegalStateException("无法写入所选位置")
+            ?: throw IllegalStateException(appContext.getString(R.string.backup_error_cannot_write))
 
     private fun openInputStream(source: Uri): InputStream =
         appContext.contentResolver.openInputStream(source)
-            ?: throw IllegalStateException("无法读取所选文件")
+            ?: throw IllegalStateException(appContext.getString(R.string.error_cannot_read_file))
 
     private fun packageVersionName(): String = runCatching {
         appContext.packageManager.getPackageInfo(appContext.packageName, 0).versionName
     }.getOrNull() ?: "unknown"
 
     private fun parseManifest(m: JSONObject): BackupInfo {
-        require(m.optInt("format") == FORMAT_VERSION) { "不支持的备份格式版本" }
+        require(m.optInt("format") == FORMAT_VERSION) { appContext.getString(R.string.backup_error_unsupported_format) }
         val counts = m.optJSONObject("counts") ?: JSONObject()
         return BackupInfo(
             createdAt = m.optLong("createdAt"),

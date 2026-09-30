@@ -33,9 +33,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import android.net.Uri
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.FileStore
 import com.skyanchor.anynote.core.StoredFile
 import com.skyanchor.anynote.data.entity.AttachmentType
@@ -117,10 +119,10 @@ fun AttachmentStrip(
             AttachmentTile(item, onRemove = { onRemove(item) }, onClick = { onClick(item) })
         }
         item(key = "add_image") {
-            AddTile(AppIcons.Image, "图片") { onAdd(AttachmentType.IMAGE) }
+            AddTile(AppIcons.Image, stringResource(R.string.att_add_image)) { onAdd(AttachmentType.IMAGE) }
         }
         item(key = "add_file") {
-            AddTile(AppIcons.File, "文件") { onAdd(AttachmentType.FILE) }
+            AddTile(AppIcons.File, stringResource(R.string.att_add_file)) { onAdd(AttachmentType.FILE) }
         }
     }
 }
@@ -194,7 +196,7 @@ private fun AttachmentTile(
                 .noRippleClickable(onRemove),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(AppIcons.Close, "移除附件", tint = Color.White, modifier = Modifier.size(14.dp))
+            Icon(AppIcons.Close, stringResource(R.string.att_remove_attachment), tint = Color.White, modifier = Modifier.size(14.dp))
         }
     }
 }

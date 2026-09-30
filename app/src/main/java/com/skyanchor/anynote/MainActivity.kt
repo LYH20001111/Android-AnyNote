@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.skyanchor.anynote.MainActivity.Companion.EXTRA_NOTE_ID
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.data.AnyNoteRepository
 import com.skyanchor.anynote.reminder.NotificationHelper
 import com.skyanchor.anynote.ui.AppEnv
@@ -80,7 +81,7 @@ private fun AnyNoteRoot(intent: Intent?) {
     ) { granted ->
         // 通知权限从"关闭"变为"允许"后必须重建调度，否则此前登记的提醒全部失效（基线 §24）
         env.resyncAll()
-        if (!granted) env.toast("未授予通知权限，提醒将无法送达")
+        if (!granted) env.toast(context.getString(R.string.main_notification_permission_denied))
     }
 
     LaunchedEffect(Unit) {

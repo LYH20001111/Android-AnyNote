@@ -4,6 +4,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.data.entity.Folder
 import java.util.UUID
 
@@ -15,11 +16,11 @@ object DefaultFolders {
     const val OTHER = "folder_other"
 
     val ALL = listOf(
-        Triple(LIFE, "生活", "life"),
-        Triple(WORK, "工作", "work"),
-        Triple(FAMILY, "家庭", "family"),
-        Triple(STUDY, "学习", "study"),
-        Triple(OTHER, "其他", "other"),
+        Triple(LIFE, R.string.folder_life, "life"),
+        Triple(WORK, R.string.folder_work, "work"),
+        Triple(FAMILY, R.string.folder_family, "family"),
+        Triple(STUDY, R.string.folder_study, "study"),
+        Triple(OTHER, R.string.folder_other, "other"),
     )
 }
 
@@ -30,6 +31,8 @@ object DefaultFolders {
  */
 class AnyNoteDatabase(context: Context) :
     SQLiteOpenHelper(context.applicationContext, Schema.DATABASE_NAME, null, Schema.DATABASE_VERSION) {
+
+    private val appContext = context.applicationContext
 
     override fun onConfigure(db: SQLiteDatabase) {
         db.setForeignKeyConstraintsEnabled(true)
@@ -63,12 +66,12 @@ class AnyNoteDatabase(context: Context) :
         val now = System.currentTimeMillis()
         db.beginTransaction()
         try {
-            DefaultFolders.ALL.forEachIndexed { index, (id, name, icon) ->
+            DefaultFolders.ALL.forEachIndexed { index, (id, nameRes, icon) ->
                 db.execSQL(
                     "INSERT INTO folders (id,name,color_key,icon_key,is_builtin,sort_order,created_at,updated_at)" +
                         " VALUES (?,?,?,?,?,?,?,?)",
                     arrayOf<Any>(
-                        id, name, icon, icon, 1, index, now, now,
+                        id, appContext.getString(nameRes), icon, icon, 1, index, now, now,
                     )
                 )
             }

@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import com.skyanchor.anynote.MainActivity
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.dateTimeText
 import com.skyanchor.anynote.data.SettingsStore
 import com.skyanchor.anynote.data.dao.NoteDao
@@ -24,14 +25,14 @@ import java.time.ZoneId
  * 一次闹钟注册的结果。它必须能被调用方观察到：注册失败如果只被 `runCatching` 吞掉，
  * "到点什么都没发生"就永远无从定位（基线 §24）。
  */
-enum class ArmResult(val label: String) {
+enum class ArmResult(val label: String, val labelRes: Int) {
     /** setAlarmClock：不会被 Doze 合并，状态栏会出现闹钟图标。 */
-    ALARM_CLOCK("最高优先级闹钟"),
+    ALARM_CLOCK("最高优先级闹钟", R.string.arm_result_alarm_clock),
 
-    EXACT("精确闹钟"),
-    WINDOW("时间窗口"),
-    SKIPPED("未注册"),
-    FAILED("注册失败"),
+    EXACT("精确闹钟", R.string.arm_result_exact),
+    WINDOW("时间窗口", R.string.arm_result_window),
+    SKIPPED("未注册", R.string.arm_result_skipped),
+    FAILED("注册失败", R.string.arm_result_failed),
 }
 
 /** 调度器读数，供设置页自检使用。`systemNextAlarmAt` 为 null 说明系统侧根本没有闹钟。 */
@@ -83,7 +84,7 @@ class ReminderScheduler(
             doomed.forEach { notifications.cancel(it.notificationId) }
             reminderDao.recordHealth(
                 HealthKind.MISSED_DROPPED.storage,
-                reason = "$expired 条已过补发时效，按过期归档",
+                reason = appContext.getString(R.string.health_reason_expired_archived, expired),
             )
         }
         // 总开关关闭时必须真正撤下闹钟：状态栏的闹钟图标、到点唤醒的进程都归系统侧，
@@ -96,7 +97,7 @@ class ReminderScheduler(
         reminderDao.activeRules().forEach { syncRule(it, now) }
         // 已触发但用户尚未处理的事件，闹钟可能随重启丢失，需要重新挂上
         reminderDao.pendingAll().filter { it.status != OccurrenceStatus.SCHEDULED }.forEach { arm(it) }
-        reminderDao.recordHealth(HealthKind.SELF_HEAL.storage, reason = "全量重建调度")
+        reminderDao.recordHealth(HealthKind.SELF_HEAL.storage, reason = appContext.getString(R.string.health_reason_full_resync))
         reminderDao.pruneHealth(HEALTH_KEEP_LAST)
         armWatchdog(now)
     }
@@ -121,7 +122,7 @@ class ReminderScheduler(
                 )
                 reminderDao.recordHealth(
                     HealthKind.MISSED_REDELIVERED.storage,
-                    reason = "通知仍在栏上，该次按已触达接回待处理",
+                    reason = appContext.getString(R.string.health_reason_rescued_delivered),
                     ruleId = occurrence.ruleId,
                     occurrenceId = occurrence.id,
                     scheduledAt = occurrence.scheduledAt,
@@ -227,11 +228,14 @@ class ReminderScheduler(
         if (systemHasAlarm) return
         reminderDao.recordHealth(
             HealthKind.ALARM_CLEARED.storage,
-            reason = "库里 ${missed.size} 条已到点、系统侧却查不到任何闹钟",
+            reason = appContext.getString(R.string.health_reason_no_system_alarm, missed.size),
             ruleId = missed.first().ruleId,
             occurrenceId = missed.first().id,
             scheduledAt = missed.first().scheduledAt,
-            detail = "计划 ${dateTimeText(missed.first().nextAlarmAt)} 的注册未被系统兑现",
+            detail = appContext.getString(
+                R.string.health_reason_arm_not_fulfilled,
+                dateTimeText(appContext, missed.first().nextAlarmAt),
+            ),
         )
     }
 
@@ -302,7 +306,7 @@ class ReminderScheduler(
             if (rescued != null) {
                 reminderDao.recordHealth(
                     HealthKind.ARM_DEGRADED.storage,
-                    reason = "精确闹钟注册失败，已退化为窗口闹钟",
+                    reason = appContext.getString(R.string.health_reason_arm_degraded),
                     ruleId = occurrence.ruleId,
                     occurrenceId = occurrence.id,
                     scheduledAt = occurrence.scheduledAt,
@@ -339,7 +343,7 @@ class ReminderScheduler(
             .onFailure {
                 reminderDao.recordHealth(
                     HealthKind.ARM_FAILED.storage,
-                    reason = "看门狗闹钟注册失败：${it.javaClass.simpleName}",
+                    reason = appContext.getString(R.string.health_reason_watchdog_failed, it.javaClass.simpleName),
                 )
             }
     }

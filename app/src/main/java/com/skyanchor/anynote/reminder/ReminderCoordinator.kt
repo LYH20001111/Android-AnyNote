@@ -1,5 +1,7 @@
 package com.skyanchor.anynote.reminder
 
+import android.content.Context
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.humanSpan
 import com.skyanchor.anynote.data.SettingsStore
 import com.skyanchor.anynote.data.dao.FolderDao
@@ -22,6 +24,7 @@ import java.time.Instant
  * - 长期 ReminderRule 只在"完成后结束整个重复系列"或用户手动停用时才改变。
  */
 class ReminderCoordinator(
+    context: Context,
     private val noteDao: NoteDao,
     private val reminderDao: ReminderDao,
     private val folderDao: FolderDao,
@@ -29,6 +32,7 @@ class ReminderCoordinator(
     private val scheduler: ReminderScheduler,
     private val notifications: NotificationHelper,
 ) {
+    private val appContext = context.applicationContext
 
     /** 系统闹钟到点。只负责把事件标记为已触达并展示通知。 */
     fun trigger(occurrenceId: String) {
@@ -76,9 +80,9 @@ class ReminderCoordinator(
      */
     private fun handleDeliveryFailure(occurrence: ReminderOccurrence, outcome: ShowOutcome, now: Long) {
         val reason = when (outcome) {
-            ShowOutcome.NoPermission -> "POST_NOTIFICATIONS 未授权"
-            is ShowOutcome.Error -> "notify() 抛出 ${outcome.cause}"
-            else -> "未知"
+            ShowOutcome.NoPermission -> appContext.getString(R.string.health_reason_no_permission)
+            is ShowOutcome.Error -> appContext.getString(R.string.health_reason_notify_threw, outcome.cause)
+            else -> appContext.getString(R.string.health_reason_unknown)
         }
         if (outcome is ShowOutcome.Error) {
             val retry = occurrence.copy(
@@ -116,7 +120,11 @@ class ReminderCoordinator(
             val result = scheduler.arm(updated)
             reminderDao.recordHealth(
                 HealthKind.MISSED_REDELIVERED.storage,
-                reason = "错过 ${humanSpan(now - occurrence.scheduledAt)}，已排队补发（${result.label}）",
+                reason = appContext.getString(
+                    R.string.health_reason_missed_requeued,
+                    humanSpan(appContext, now - occurrence.scheduledAt),
+                    appContext.getString(result.labelRes),
+                ),
                 ruleId = occurrence.ruleId,
                 occurrenceId = occurrence.id,
                 scheduledAt = occurrence.scheduledAt,

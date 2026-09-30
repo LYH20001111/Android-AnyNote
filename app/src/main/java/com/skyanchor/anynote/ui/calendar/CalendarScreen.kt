@@ -34,13 +34,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.skyanchor.anynote.core.WEEKDAY_CN
-import com.skyanchor.anynote.core.dayOfWeekCn
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.timeOnlyText
 import com.skyanchor.anynote.core.toLocal
+import com.skyanchor.anynote.core.weekdayRes
 import com.skyanchor.anynote.data.entity.NoteCard
 import com.skyanchor.anynote.data.entity.OccurrenceStatus
 import com.skyanchor.anynote.data.entity.ReminderOccurrence
@@ -64,6 +65,7 @@ import com.skyanchor.anynote.ui.theme.CategoryPalette
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 /** 日历格最多画几个分类点，超出的分类在当天的列表里看。 */
 private const val MAX_DOTS = 3
@@ -128,8 +130,8 @@ fun CalendarScreen(env: AppEnv) {
                     item(key = "empty") {
                         EmptyState(
                             AppIcons.Calendar,
-                            "这一天没有提醒",
-                            "换一天看看，或点右下角 + 新建",
+                            stringResource(R.string.cal_empty_title),
+                            stringResource(R.string.cal_empty_hint),
                             modifier = Modifier.padding(top = 9.dp),
                         )
                     }
@@ -171,18 +173,18 @@ private fun JumpToDateDialog(
     DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextAction("确定") {
+            TextAction(stringResource(R.string.action_ok)) {
                 val millis = state.selectedDateMillis
                 if (millis != null) onConfirm(LocalDate.ofEpochDay(millis / 86_400_000L)) else onDismiss()
             }
         },
-        dismissButton = { TextAction("取消", color = AppColors.TextSecondary, onClick = onDismiss) },
+        dismissButton = { TextAction(stringResource(R.string.action_cancel), color = AppColors.TextSecondary, onClick = onDismiss) },
     ) {
         DatePicker(
             state = state,
             title = {
                 Text(
-                    "跳转到指定日期",
+                    stringResource(R.string.cal_jump_to_date),
                     style = MaterialTheme.typography.titleMedium,
                     color = AppColors.TextPrimary,
                     modifier = Modifier.padding(start = 24.dp, top = 20.dp, bottom = 4.dp),
@@ -202,7 +204,7 @@ private fun MonthHeader(
     onToday: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Chevron(AppIcons.ChevronLeft, "上一月", onPrev)
+        Chevron(AppIcons.ChevronLeft, stringResource(R.string.cal_prev_month), onPrev)
         Row(
             Modifier
                 .weight(1f)
@@ -213,14 +215,14 @@ private fun MonthHeader(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                "${month.year} 年 ${month.monthValue} 月",
+                month.format(DateTimeFormatter.ofPattern(stringResource(R.string.pattern_month_title))),
                 style = MaterialTheme.typography.titleLarge,
                 color = AppColors.TextPrimary,
             )
         }
-        Chevron(AppIcons.ChevronRight, "下一月", onNext)
+        Chevron(AppIcons.ChevronRight, stringResource(R.string.cal_next_month), onNext)
         Spacer(Modifier.width(6.dp))
-        TextAction("今天", onClick = onToday)
+        TextAction(stringResource(R.string.rel_today), onClick = onToday)
     }
 }
 
@@ -250,9 +252,9 @@ private fun MonthGrid(
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp),
     ) {
         Row(Modifier.fillMaxWidth()) {
-            WEEKDAY_CN.forEach { label ->
+            listOf(1, 2, 3, 4, 5, 6, 7).forEach { iso ->
                 Text(
-                    label,
+                    stringResource(weekdayRes(iso)),
                     style = MaterialTheme.typography.labelSmall,
                     color = AppColors.TextTertiary,
                     modifier = Modifier.weight(1f),
@@ -355,13 +357,18 @@ private fun CategoryDots(colors: List<String>, selected: Boolean) {
 private fun DaySectionHeader(date: LocalDate, count: Int) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
         Text(
-            "${date.monthValue} 月 ${date.dayOfMonth} 日 · ${dayOfWeekCn(date.dayOfWeek)}",
+            stringResource(
+                R.string.cal_day_title,
+                date.monthValue,
+                date.dayOfMonth,
+                stringResource(weekdayRes(date.dayOfWeek.value)),
+            ),
             style = MaterialTheme.typography.titleMedium,
             color = AppColors.TextPrimary,
             modifier = Modifier.weight(1f),
         )
         Text(
-            if (count > 0) "$count 条提醒" else "暂无提醒",
+            if (count > 0) stringResource(R.string.cal_count_reminders, count) else stringResource(R.string.cal_no_reminders),
             style = MaterialTheme.typography.labelMedium,
             color = AppColors.TextTertiary,
         )
@@ -378,7 +385,7 @@ private fun DayEntryRow(card: NoteCard, occurrence: ReminderOccurrence, onClick:
     val snoozed = occurrence.status == OccurrenceStatus.SNOOZED
     val hasTitle = card.note.title?.isNotBlank() == true
     val bodyLine = card.note.body.lineSequence().firstOrNull { it.isNotBlank() }
-    val title = card.note.title?.takeIf { hasTitle } ?: bodyLine?.take(24) ?: "备忘录"
+    val title = card.note.title?.takeIf { hasTitle } ?: bodyLine?.take(24) ?: stringResource(R.string.cal_fallback_title)
 
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
@@ -403,10 +410,10 @@ private fun DayEntryRow(card: NoteCard, occurrence: ReminderOccurrence, onClick:
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     folder?.let { TagPill(it.name, tint = accent) }
-                    if (snoozed) TagPill("稍后提醒", tint = AppColors.Warning)
-                    if (overdue) TagPill("已逾期", tint = AppColors.Danger)
+                    if (snoozed) TagPill(stringResource(R.string.action_snooze), tint = AppColors.Warning)
+                    if (overdue) TagPill(stringResource(R.string.status_overdue), tint = AppColors.Danger)
                     if (card.attachmentCount > 0) {
-                        TagPill("${card.attachmentCount} 附件", tint = AppColors.TextSecondary)
+                        TagPill(stringResource(R.string.cal_attachment_count, card.attachmentCount), tint = AppColors.TextSecondary)
                     }
                 }
             }
@@ -419,7 +426,7 @@ private fun DayEntryRow(card: NoteCard, occurrence: ReminderOccurrence, onClick:
                 )
                 if (card.rule?.type?.recurring == true) {
                     Spacer(Modifier.height(5.dp))
-                    Icon(AppIcons.Repeat, "重复提醒", tint = accent, modifier = Modifier.size(13.dp))
+                    Icon(AppIcons.Repeat, stringResource(R.string.cal_repeat_desc), tint = accent, modifier = Modifier.size(13.dp))
                 }
             }
         }

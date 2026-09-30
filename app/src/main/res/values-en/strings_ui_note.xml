@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===== Note editor (NoteEditorScreen, ed_) ===== -->
+    <string name="ed_new_note">New Note</string>
+    <string name="ed_edit_note">Edit Note</string>
+    <string name="ed_saving">Saving…</string>
+    <string name="ed_title_placeholder">Title (optional)</string>
+    <string name="ed_body_placeholder">Start writing…</string>
+    <string name="ed_category">Category</string>
+    <string name="ed_priority">Priority</string>
+    <string name="ed_reminder_section">Reminders (multiple supported)</string>
+    <string name="ed_no_reminder_hint">No reminder set yet. Once saved, this note will appear in the \"No reminder\" group.</string>
+    <string name="ed_add_reminder">Add reminder</string>
+    <string name="ed_add_another_reminder">Add another reminder</string>
+    <string name="ed_attachments">Attachments</string>
+    <string name="ed_attachment_note">Voice and video attachments are not available yet. Images and files are copied into the app\'s private storage; deleting the original file does not affect the note.</string>
+    <string name="ed_behavior">Behavior</string>
+    <string name="ed_enable_completion">Enable completion status</string>
+    <string name="ed_enable_completion_desc">Shows \"Complete / Snooze / Skip this time\" on the notification</string>
+    <string name="ed_lock_screen_preview">Show body on lock screen</string>
+    <string name="ed_lock_screen_preview_desc">When off, the notification only shows \"You have a new reminder\"</string>
+    <string name="ed_attachment_import_failed">Failed to import the attachment. Please try again.</string>
+    <string name="ed_empty_hint">Write something first</string>
+    <string name="ed_need_category">Create a category first in \"Me → Category management\"</string>
+    <string name="ed_done">Done</string>
+    <string name="ed_reminder_settings">Reminder Settings</string>
+    <string name="ed_disabled">Disabled</string>
+    <string name="ed_delete_reminder">Delete reminder</string>
+    <string name="ed_valid_until">Valid until %1$s</string>
+
+    <!-- ===== Note detail (NoteDetailScreen, det_) ===== -->
+    <string name="det_note">Note</string>
+    <string name="det_no_title">Untitled</string>
+    <string name="det_no_body">(No content)</string>
+    <string name="det_priority_label">%1$s priority</string>
+    <string name="det_complete">Complete</string>
+    <string name="det_snooze_short">Snooze</string>
+    <string name="det_skip_short">Skip</string>
+    <string name="det_pending_reminders">Pending reminders (%1$d)</string>
+    <string name="det_exhausted_hint">Nothing pending and no future triggers. Tap \"Complete\" to archive this note to history.</string>
+    <string name="det_round_done_hint">This round is done. Waiting for the next trigger.</string>
+    <string name="det_no_pending_hint">Nothing pending.</string>
+    <string name="det_reminder_rules">Reminder rules (%1$d)</string>
+    <string name="det_no_rules_hint">No reminders yet. Add one first.</string>
+    <string name="det_add_reminder">Add reminder</string>
+    <string name="det_attachments_count">Attachments (%1$d)</string>
+    <string name="det_created_at">Created</string>
+    <string name="det_updated_at">Last updated</string>
+    <string name="det_completion_button">Complete button</string>
+    <string name="det_enabled">Enabled</string>
+    <string name="det_off">Off</string>
+    <string name="det_lock_screen_body">Body on lock screen</string>
+    <string name="det_shown">Shown</string>
+    <string name="det_hidden">Hidden</string>
+    <string name="det_notification_permission_hint">System notification permission is off, so reminders will not be delivered when due.</string>
+    <string name="det_snooze">Snooze</string>
+    <string name="det_snooze_desc">Delays only this occurrence without changing the long-term repeat rule.</string>
+    <string name="det_trash_confirm_title">Move to Trash?</string>
+    <string name="det_trash_confirm_text">The note and its reminders will stop being scheduled. You can restore it from Trash.</string>
+    <string name="det_move_to_trash">Move to Trash</string>
+    <string name="det_status_scheduled">Scheduled</string>
+    <string name="det_status_triggered">Delivered, waiting to be handled</string>
+    <string name="det_status_snoozed">Snoozed until %1$s</string>
+    <string name="det_rule_summary">%1$s · %2$s</string>
+    <string name="det_disabled">Disabled</string>
+    <string name="det_next">Next %1$s</string>
+    <string name="det_no_future_occurrence">No future triggers</string>
+    <string name="det_trash_hint">Notes in Trash no longer trigger reminders</string>
+
+    <!-- ===== Shared components (Controls.kt, ctl_) ===== -->
+    <string name="ctl_new">New</string>
+</resources>

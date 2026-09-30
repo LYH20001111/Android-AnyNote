@@ -1,14 +1,15 @@
 package com.skyanchor.anynote.data.entity
 
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.reminder.IntervalUnit
 import com.skyanchor.anynote.reminder.RecurrenceType
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-enum class Priority(val storage: String, val label: String) {
-    LOW("low", "低"),
-    MEDIUM("medium", "中"),
-    HIGH("high", "高");
+enum class Priority(val storage: String, val label: String, val labelRes: Int) {
+    LOW("low", "低", R.string.priority_low),
+    MEDIUM("medium", "中", R.string.priority_medium),
+    HIGH("high", "高", R.string.priority_high);
 
     companion object {
         fun from(value: String?): Priority = entries.firstOrNull { it.storage == value } ?: MEDIUM
@@ -25,10 +26,10 @@ enum class NoteStatus(val storage: String) {
     }
 }
 
-enum class AttachmentType(val storage: String, val label: String) {
-    IMAGE("image", "图片"),
-    FILE("file", "文件"),
-    AUDIO("audio", "语音");
+enum class AttachmentType(val storage: String, val label: String, val labelRes: Int) {
+    IMAGE("image", "图片", R.string.attachment_image),
+    FILE("file", "文件", R.string.attachment_file),
+    AUDIO("audio", "语音", R.string.attachment_audio);
 
     companion object {
         fun from(value: String?): AttachmentType = entries.firstOrNull { it.storage == value } ?: FILE
@@ -51,9 +52,9 @@ enum class OccurrenceStatus(val storage: String) {
 }
 
 /** 完成一次 vs 结束整个重复系列（基线 §7.2 / §38-5） */
-enum class CompletionMode(val storage: String, val label: String) {
-    CONTINUE("continue", "完成本次，后续继续提醒"),
-    END_SERIES("end_series", "完成后结束整个重复提醒");
+enum class CompletionMode(val storage: String, val label: String, val labelRes: Int) {
+    CONTINUE("continue", "完成本次，后续继续提醒", R.string.completion_continue),
+    END_SERIES("end_series", "完成后结束整个重复提醒", R.string.completion_end_series);
 
     companion object {
         fun from(value: String?): CompletionMode =
@@ -169,19 +170,19 @@ data class HealthEvent(
 }
 
 /** scheduler_health.kind 的取值集合。label 直接给设置页展示，不再在 UI 层映射。 */
-enum class HealthKind(val storage: String, val label: String) {
-    ARM_FAILED("arm_failed", "闹钟注册失败"),
-    ARM_DEGRADED("arm_degraded", "闹钟已降级"),
-    DELIVERY_BLOCKED("delivery_blocked", "通知未能弹出"),
-    MISSED_REDELIVERED("missed_redelivered", "逾期已补发"),
-    MISSED_DROPPED("missed_dropped", "错过已过时效"),
-    RECEIVER_INTERRUPTED("receiver_interrupted", "后台执行中断"),
-    SELF_HEAL("self_heal", "调度自愈"),
-    SELF_TEST("self_test", "自检提醒"),
-    ALARM_CLEARED("alarm_cleared", "系统侧闹钟已消失"),
-    RECEIPT_OK("receipt_ok", "自检已收到"),
-    RECEIPT_MISSING("receipt_missing", "自检未收到"),
-    OTHER("other", "其他调度事件");
+enum class HealthKind(val storage: String, val label: String, val labelRes: Int) {
+    ARM_FAILED("arm_failed", "闹钟注册失败", R.string.health_arm_failed),
+    ARM_DEGRADED("arm_degraded", "闹钟已降级", R.string.health_arm_degraded),
+    DELIVERY_BLOCKED("delivery_blocked", "通知未能弹出", R.string.health_delivery_blocked),
+    MISSED_REDELIVERED("missed_redelivered", "逾期已补发", R.string.health_missed_redelivered),
+    MISSED_DROPPED("missed_dropped", "错过已过时效", R.string.health_missed_dropped),
+    RECEIVER_INTERRUPTED("receiver_interrupted", "后台执行中断", R.string.health_receiver_interrupted),
+    SELF_HEAL("self_heal", "调度自愈", R.string.health_self_heal),
+    SELF_TEST("self_test", "自检提醒", R.string.health_self_test),
+    ALARM_CLEARED("alarm_cleared", "系统侧闹钟已消失", R.string.health_alarm_cleared),
+    RECEIPT_OK("receipt_ok", "自检已收到", R.string.health_receipt_ok),
+    RECEIPT_MISSING("receipt_missing", "自检未收到", R.string.health_receipt_missing),
+    OTHER("other", "其他调度事件", R.string.health_other);
 
     companion object {
         /** 兜底必须是中性的：把未知 kind 显示成"调度自愈"会把一次真实失败伪装成正常心跳。 */

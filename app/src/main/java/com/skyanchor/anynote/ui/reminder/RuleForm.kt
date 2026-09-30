@@ -1,5 +1,6 @@
 package com.skyanchor.anynote.ui.reminder
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -30,9 +31,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.skyanchor.anynote.core.WEEKDAY_CN
+import com.skyanchor.anynote.R
+import com.skyanchor.anynote.core.weekdayRes
 import com.skyanchor.anynote.data.entity.CompletionMode
 import com.skyanchor.anynote.data.entity.ReminderRule
 import com.skyanchor.anynote.reminder.IntervalUnit
@@ -88,12 +92,13 @@ fun newRule(noteId: String, zone: ZoneId = ZoneId.systemDefault()): ReminderRule
 fun RuleForm(rule: ReminderRule, onChange: (ReminderRule) -> Unit) {
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Column(Modifier.fillMaxWidth()) {
-        FieldLabel("重复方式")
+        FieldLabel(stringResource(R.string.rf_repeat_type))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(RecurrenceType.entries.toList()) { type ->
-                FilterChip(type.label, rule.type == type) {
+                FilterChip(stringResource(type.labelRes), rule.type == type) {
                     onChange(
                         rule.copy(
                             type = type,
@@ -112,12 +117,12 @@ fun RuleForm(rule: ReminderRule, onChange: (ReminderRule) -> Unit) {
         }
 
         SpacerHeight(14)
-        FieldLabel(if (rule.type == RecurrenceType.ONCE) "提醒时间" else "首次提醒 / 时刻")
+        FieldLabel(if (rule.type == RecurrenceType.ONCE) stringResource(R.string.rf_reminder_time) else stringResource(R.string.rf_first_reminder_time))
         DateTimeField(rule.startLocal) { showStartPicker = true }
         if (rule.type.needsWeekdayHint) {
             SpacerHeight(6)
             Text(
-                rule.weekdayHint,
+                rule.weekdayHint(context),
                 style = MaterialTheme.typography.bodySmall,
                 color = AppColors.TextTertiary,
             )
@@ -126,13 +131,13 @@ fun RuleForm(rule: ReminderRule, onChange: (ReminderRule) -> Unit) {
         when (rule.type) {
             RecurrenceType.CUSTOM_WEEKDAYS -> {
                 SpacerHeight(14)
-                FieldLabel("选择星期")
+                FieldLabel(stringResource(R.string.rf_select_weekdays))
                 WeekdayPicker(rule.weekdays) { days -> onChange(rule.copy(weekdays = days)) }
             }
 
             RecurrenceType.MONTHLY -> {
                 SpacerHeight(14)
-                FieldLabel("每月几号（当月不存在时自动落到最后一天）")
+                FieldLabel(stringResource(R.string.rf_monthly_day_label))
                 NumberPicker(1, 31, rule.dayOfMonth ?: rule.startLocal.dayOfMonth) { day ->
                     onChange(rule.copy(dayOfMonth = day))
                 }
@@ -140,12 +145,12 @@ fun RuleForm(rule: ReminderRule, onChange: (ReminderRule) -> Unit) {
 
             RecurrenceType.YEARLY -> {
                 SpacerHeight(14)
-                FieldLabel("月份")
+                FieldLabel(stringResource(R.string.rf_month))
                 NumberPicker(1, 12, rule.monthOfYear ?: rule.startLocal.monthValue) { month ->
                     onChange(rule.copy(monthOfYear = month))
                 }
                 SpacerHeight(14)
-                FieldLabel("日期")
+                FieldLabel(stringResource(R.string.rf_day))
                 NumberPicker(1, 31, rule.dayOfMonth ?: rule.startLocal.dayOfMonth) { day ->
                     onChange(rule.copy(dayOfMonth = day))
                 }
@@ -153,7 +158,7 @@ fun RuleForm(rule: ReminderRule, onChange: (ReminderRule) -> Unit) {
 
             RecurrenceType.INTERVAL -> {
                 SpacerHeight(14)
-                FieldLabel("间隔")
+                FieldLabel(stringResource(R.string.rf_interval))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     StepperField(rule.intervalValue.coerceIn(1, 999)) { value ->
                         onChange(rule.copy(intervalValue = value))
@@ -166,7 +171,7 @@ fun RuleForm(rule: ReminderRule, onChange: (ReminderRule) -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         IntervalUnit.entries.forEach { unit ->
-                            FilterChip("每 ${unit.label}", rule.intervalUnit == unit, Modifier.padding(end = 6.dp)) {
+                            FilterChip(stringResource(R.string.rf_every_unit, stringResource(unit.labelRes)), rule.intervalUnit == unit, Modifier.padding(end = 6.dp)) {
                                 onChange(rule.copy(intervalUnit = unit))
                             }
                         }
@@ -179,8 +184,8 @@ fun RuleForm(rule: ReminderRule, onChange: (ReminderRule) -> Unit) {
 
         SpacerHeight(14)
         SwitchRow(
-            "设置结束日期",
-            rule.endDate?.let { "到 $it 为止" } ?: "长期有效",
+            stringResource(R.string.rf_set_end_date),
+            rule.endDate?.let { stringResource(R.string.rf_end_until, it) } ?: stringResource(R.string.rf_no_end_date),
             rule.endDate != null,
         ) { checked ->
             onChange(rule.copy(endDate = if (checked) rule.startLocal.toLocalDate().plusMonths(1) else null))
@@ -191,42 +196,42 @@ fun RuleForm(rule: ReminderRule, onChange: (ReminderRule) -> Unit) {
         }
 
         SpacerHeight(14)
-        FieldLabel("完成方式")
+        FieldLabel(stringResource(R.string.rf_completion_mode))
         SegmentedTabs(
             listOf(
-                CompletionMode.CONTINUE to "本次完成",
-                CompletionMode.END_SERIES to "结束系列",
+                CompletionMode.CONTINUE to stringResource(R.string.rf_mode_continue),
+                CompletionMode.END_SERIES to stringResource(R.string.rf_mode_end_series),
             ),
             rule.completionMode,
         ) { mode -> onChange(rule.copy(completionMode = mode)) }
         SpacerHeight(6)
         Text(
-            rule.completionMode.label,
+            stringResource(rule.completionMode.labelRes),
             style = MaterialTheme.typography.bodySmall,
             color = AppColors.TextTertiary,
         )
 
         SpacerHeight(14)
         SwitchRow(
-            "未处理时自动再提醒",
-            "通知停留后按固定间隔再次提醒，仅影响本次事件",
+            stringResource(R.string.rf_auto_re_remind),
+            stringResource(R.string.rf_auto_re_remind_desc),
             rule.autoRepeatEnabled,
         ) { checked -> onChange(rule.copy(autoRepeatEnabled = checked)) }
         if (rule.autoRepeatEnabled) {
             SpacerHeight(10)
-            FieldLabel("再提醒间隔")
+            FieldLabel(stringResource(R.string.rf_re_remind_interval))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(AUTO_REPEAT_MINUTES) { minutes ->
-                    FilterChip("$minutes 分钟", rule.autoRepeatIntervalMinutes == minutes) {
+                    FilterChip(stringResource(R.string.rf_minutes, minutes), rule.autoRepeatIntervalMinutes == minutes) {
                         onChange(rule.copy(autoRepeatIntervalMinutes = minutes))
                     }
                 }
             }
             SpacerHeight(12)
-            FieldLabel("最多重复")
+            FieldLabel(stringResource(R.string.rf_max_repeats))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(AUTO_REPEAT_LIMITS) { limit ->
-                    FilterChip(if (limit == 0) "不限" else "$limit 次", rule.autoRepeatLimit == limit) {
+                    FilterChip(if (limit == 0) stringResource(R.string.rf_unlimited) else stringResource(R.string.rf_times, limit), rule.autoRepeatLimit == limit) {
                         onChange(rule.copy(autoRepeatLimit = limit))
                     }
                 }
@@ -234,23 +239,23 @@ fun RuleForm(rule: ReminderRule, onChange: (ReminderRule) -> Unit) {
         }
 
         SpacerHeight(14)
-        SwitchRow("启用此规则", RecurrenceEngine.describe(rule), rule.isEnabled) { checked ->
+        SwitchRow(stringResource(R.string.rf_enable_rule), RecurrenceEngine.describe(context, rule), rule.isEnabled) { checked ->
             onChange(rule.copy(isEnabled = checked))
         }
 
         SpacerHeight(14)
         InfoBanner(
             if (rule.type.recurring) {
-                "重复提醒按设备当前时区的钟表时间触发，跨时区旅行后仍是当地时间。"
+                stringResource(R.string.rf_recurring_zone_note)
             } else {
-                "单次提醒固定在你选择时所属的时区（${rule.timezone}），换时区后绝对时刻不变。"
+                stringResource(R.string.rf_once_zone_note, rule.timezone)
             }
         )
     }
 
     if (showStartPicker) {
         DateTimePickerDialog(
-            "选择提醒时间",
+            stringResource(R.string.rf_pick_reminder_time),
             rule.startLocal,
             onDismiss = { showStartPicker = false },
             onConfirm = { picked ->
@@ -261,7 +266,7 @@ fun RuleForm(rule: ReminderRule, onChange: (ReminderRule) -> Unit) {
     }
     if (showEndPicker && rule.endDate != null) {
         DateTimePickerDialog(
-            "选择结束日期",
+            stringResource(R.string.rf_pick_end_date),
             LocalDateTime.of(rule.endDate, LocalTime.of(23, 59)),
             onDismiss = { showEndPicker = false },
             onConfirm = { picked ->
@@ -282,13 +287,12 @@ private val RecurrenceType.needsWeekdayHint: Boolean
         this == RecurrenceType.YEARLY ||
         (this == RecurrenceType.INTERVAL)
 
-private val ReminderRule.weekdayHint: String
-    get() = when {
-        type == RecurrenceType.WEEKLY -> "每周按 ${WEEKDAY_CN[startLocal.dayOfWeek.value - 1]} 重复"
-        type == RecurrenceType.MONTHLY -> "默认按每月 ${dayOfMonth ?: startLocal.dayOfMonth} 日重复"
-        type == RecurrenceType.YEARLY -> "默认按每年 ${monthOfYear ?: startLocal.monthValue} 月 ${dayOfMonth ?: startLocal.dayOfMonth} 日重复"
-        else -> "按所选日期与时刻起算"
-    }
+private fun ReminderRule.weekdayHint(context: Context): String = when {
+    type == RecurrenceType.WEEKLY -> context.getString(R.string.rf_weekly_hint, context.getString(weekdayRes(startLocal.dayOfWeek.value)))
+    type == RecurrenceType.MONTHLY -> context.getString(R.string.rf_monthly_hint, dayOfMonth ?: startLocal.dayOfMonth)
+    type == RecurrenceType.YEARLY -> context.getString(R.string.rf_yearly_hint, monthOfYear ?: startLocal.monthValue, dayOfMonth ?: startLocal.dayOfMonth)
+    else -> context.getString(R.string.rf_hint_from_start)
+}
 
 @Composable
 private fun EndDateField(date: LocalDate, onClick: () -> Unit) {
@@ -304,7 +308,7 @@ private fun EndDateField(date: LocalDate, onClick: () -> Unit) {
         Icon(AppIcons.Calendar, null, tint = AppColors.Primary, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(10.dp))
         Text(
-            "${date.year} 年 ${date.monthValue} 月 ${date.dayOfMonth} 日",
+            stringResource(R.string.rf_date_ymd, date.year, date.monthValue, date.dayOfMonth),
             style = MaterialTheme.typography.bodyLarge,
             color = AppColors.TextPrimary,
             modifier = Modifier.weight(1f),
@@ -316,7 +320,7 @@ private fun EndDateField(date: LocalDate, onClick: () -> Unit) {
 private fun WeekdayPicker(selected: Set<Int>, onChange: (Set<Int>) -> Unit) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items((1..7).toList()) { iso ->
-            FilterChip(WEEKDAY_CN[iso - 1], selected.contains(iso)) {
+            FilterChip(stringResource(weekdayRes(iso)), selected.contains(iso)) {
                 onChange(if (selected.contains(iso)) selected - iso else selected + iso)
             }
         }
@@ -329,7 +333,7 @@ private fun NumberPicker(from: Int, to: Int, value: Int, onChange: (Int) -> Unit
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(options) { option ->
             FilterChip(
-                if (option == 31 && to == 31) "31（月末）" else "$option",
+                if (option == 31 && to == 31) stringResource(R.string.rf_day_end_of_month) else "$option",
                 option == value,
             ) { onChange(option) }
         }

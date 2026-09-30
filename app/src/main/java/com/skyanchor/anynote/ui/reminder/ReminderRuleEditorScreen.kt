@@ -18,7 +18,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.data.entity.ReminderRule
 import com.skyanchor.anynote.reminder.RecurrenceEngine
 import com.skyanchor.anynote.ui.AppEnv
@@ -39,6 +42,7 @@ import kotlinx.coroutines.withContext
 fun ReminderRuleEditorScreen(env: AppEnv, noteId: String, ruleId: String?) {
     val repo = env.repository
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val persisted = loadAsync(ruleId ?: "new") { ruleId?.let { repo.reminders.getRule(it) } }
     val isNew = ruleId == null
@@ -71,22 +75,22 @@ fun ReminderRuleEditorScreen(env: AppEnv, noteId: String, ruleId: String?) {
     }
 
     if (!isNew && persisted.value == null) {
-        ScreenScaffold(title = "提醒设置", onBack = { env.router.pop() }) { padding ->
+        ScreenScaffold(title = stringResource(R.string.re_screen_title), onBack = { env.router.pop() }) { padding ->
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("加载中…", style = MaterialTheme.typography.bodyMedium, color = AppColors.TextTertiary)
+                Text(stringResource(R.string.status_loading), style = MaterialTheme.typography.bodyMedium, color = AppColors.TextTertiary)
             }
         }
         return
     }
 
     ScreenScaffold(
-        title = if (isNew) "添加提醒" else "提醒设置",
+        title = if (isNew) stringResource(R.string.re_add_reminder) else stringResource(R.string.re_screen_title),
         onBack = { env.router.pop() },
         actions = {
             if (!isNew) {
-                TextAction("删除", color = AppColors.Danger) { confirmDelete = true }
+                TextAction(stringResource(R.string.action_delete), color = AppColors.Danger) { confirmDelete = true }
             }
-            TextAction(if (saving) "保存中…" else "保存") { save() }
+            TextAction(if (saving) stringResource(R.string.re_saving) else stringResource(R.string.action_save)) { save() }
         },
     ) { padding ->
         Column(
@@ -100,14 +104,14 @@ fun ReminderRuleEditorScreen(env: AppEnv, noteId: String, ruleId: String?) {
             GlassCard(Modifier.fillMaxWidth().padding(top = 6.dp), corner = 22) {
                 RuleForm(draft) { draft = it }
             }
-            InfoBanner("预览：${RecurrenceEngine.describe(draft)}")
+            InfoBanner(stringResource(R.string.re_preview, RecurrenceEngine.describe(context, draft)))
             PrimaryButton(
-                "保存这条提醒",
+                stringResource(R.string.re_save_this_reminder),
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !saving,
             ) { save() }
             Text(
-                "修改规则会取消旧闹钟并按新规则重新登记（基线 §23），已触达、已推迟的这一次事件保持不变。",
+                stringResource(R.string.re_rule_change_note),
                 style = MaterialTheme.typography.bodySmall,
                 color = AppColors.TextTertiary,
             )
@@ -116,9 +120,9 @@ fun ReminderRuleEditorScreen(env: AppEnv, noteId: String, ruleId: String?) {
 
     if (confirmDelete) {
         ConfirmDialog(
-            title = "删除这条提醒？",
-            text = "它会连同尚未触发的提醒事件一起移除。",
-            confirmLabel = "删除",
+            title = stringResource(R.string.re_delete_confirm_title),
+            text = stringResource(R.string.re_delete_confirm_text),
+            confirmLabel = stringResource(R.string.action_delete),
             danger = true,
             onDismiss = { confirmDelete = false },
             onConfirm = {

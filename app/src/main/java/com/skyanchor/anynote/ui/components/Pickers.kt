@@ -40,9 +40,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.compactDateTimeText
 import com.skyanchor.anynote.ui.theme.AppColors
 import java.time.LocalDate
@@ -216,8 +218,8 @@ fun DateTimePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextAction("确定") { onConfirm(picked()) } },
-        dismissButton = { TextAction("取消", color = AppColors.TextSecondary, onClick = onDismiss) },
+        confirmButton = { TextAction(stringResource(R.string.action_ok)) { onConfirm(picked()) } },
+        dismissButton = { TextAction(stringResource(R.string.action_cancel), color = AppColors.TextSecondary, onClick = onDismiss) },
         title = { AppDialogTitle(title) },
         text = {
             Column(
@@ -238,7 +240,7 @@ fun DateTimePickerDialog(
                     Icon(AppIcons.Calendar, null, tint = AppColors.Primary, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(10.dp))
                     Text(
-                        "${date.year} 年 ${date.monthValue} 月 ${date.dayOfMonth} 日",
+                        stringResource(R.string.pk_date_selection, date.year, date.monthValue, date.dayOfMonth),
                         style = MaterialTheme.typography.bodyLarge,
                         color = AppColors.TextPrimary,
                         modifier = Modifier.weight(1f),
@@ -252,17 +254,17 @@ fun DateTimePickerDialog(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.Top,
                     ) {
-                        WheelPicker("时", hour, 23) { hour = it }
+                        WheelPicker(stringResource(R.string.pk_hour), hour, 23) { hour = it }
                         WheelSeparator()
-                        WheelPicker("分", minute, 59) { minute = it }
+                        WheelPicker(stringResource(R.string.pk_minute), minute, 59) { minute = it }
                         WheelSeparator()
-                        WheelPicker("秒", second, 59) { second = it }
+                        WheelPicker(stringResource(R.string.pk_second), second, 59) { second = it }
                     }
                     Spacer(Modifier.height(14.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         QUICK_TIMES.forEach { (label, apply) ->
                             Text(
-                                label,
+                                stringResource(label),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = AppColors.Primary,
                                 textAlign = TextAlign.Center,
@@ -293,24 +295,24 @@ fun DateTimePickerDialog(
         DatePickerDialog(
             onDismissRequest = { showCalendar = false },
             confirmButton = {
-                TextAction("确定") {
+                TextAction(stringResource(R.string.action_ok)) {
                     state.selectedDateMillis?.let {
                         date = LocalDate.ofEpochDay(it / 86_400_000L)
                     }
                     showCalendar = false
                 }
             },
-            dismissButton = { TextAction("取消", color = AppColors.TextSecondary) { showCalendar = false } },
+            dismissButton = { TextAction(stringResource(R.string.action_cancel), color = AppColors.TextSecondary) { showCalendar = false } },
         ) {
             DatePicker(state = state, showModeToggle = false)
         }
     }
 }
 
-private val QUICK_TIMES: List<Pair<String, (LocalDateTime) -> LocalDateTime>> = listOf(
-    "10分钟后" to { now -> now.plusMinutes(10) },
-    "1小时后" to { now -> now.plusHours(1) },
-    "明早9点" to { now -> now.plusDays(1).toLocalDate().atTime(9, 0) },
+private val QUICK_TIMES: List<Pair<Int, (LocalDateTime) -> LocalDateTime>> = listOf(
+    R.string.pk_quick_10min to { now -> now.plusMinutes(10) },
+    R.string.pk_quick_1hour to { now -> now.plusHours(1) },
+    R.string.pk_quick_tomorrow_9am to { now -> now.plusDays(1).toLocalDate().atTime(9, 0) },
 )
 
 /** 表单里的日期时间展示行。 */

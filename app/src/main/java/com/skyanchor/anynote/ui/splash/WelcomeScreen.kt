@@ -20,8 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.ui.AppEnv
 import com.skyanchor.anynote.ui.components.AppIcons
 import com.skyanchor.anynote.ui.components.AppBackground
@@ -64,20 +66,20 @@ fun WelcomeScreen(env: AppEnv, onStarted: () -> Unit) {
             }
             Spacer(Modifier.height(40.dp))
             Text(
-                "随记",
+                stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displaySmall,
                 color = AppColors.TextPrimary,
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                "让重要的事，不再被遗忘",
+                stringResource(R.string.wel_tagline),
                 style = MaterialTheme.typography.bodyLarge,
                 color = AppColors.TextSecondary,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(56.dp))
             PrimaryButton(
-                "开始使用",
+                stringResource(R.string.wel_get_started),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 env.repository.settings.welcomeSeen = true
@@ -85,7 +87,7 @@ fun WelcomeScreen(env: AppEnv, onStarted: () -> Unit) {
             }
             Spacer(Modifier.height(18.dp))
             Text(
-                "提醒时间支持精确到秒，实际送达由系统通知能力决定",
+                stringResource(R.string.wel_footnote),
                 style = MaterialTheme.typography.labelSmall,
                 color = AppColors.TextTertiary,
                 textAlign = TextAlign.Center,

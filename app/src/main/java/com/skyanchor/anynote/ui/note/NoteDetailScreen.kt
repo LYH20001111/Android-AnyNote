@@ -29,9 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.dateTimeText
 import com.skyanchor.anynote.core.listTimeText
 import com.skyanchor.anynote.data.entity.Attachment
@@ -70,6 +73,7 @@ import kotlinx.coroutines.withContext
 fun NoteDetailScreen(env: AppEnv, noteId: String) {
     val repo = env.repository
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val cards = loadAsync<List<NoteCard>>(env.state.refreshKey, emptyList()) {
         listOfNotNull(repo.noteCard(noteId))
@@ -96,14 +100,14 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
 
     val card = cards.value.firstOrNull()
     if (card == null) {
-        ScreenScaffold(title = "备忘录", onBack = { env.router.pop() }) { padding ->
+        ScreenScaffold(title = stringResource(R.string.det_note), onBack = { env.router.pop() }) { padding ->
             Box(
                 Modifier
                     .fillMaxSize()
                     .padding(padding),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("加载中…", style = MaterialTheme.typography.bodyMedium, color = AppColors.TextTertiary)
+                Text(stringResource(R.string.status_loading), style = MaterialTheme.typography.bodyMedium, color = AppColors.TextTertiary)
             }
         }
         return
@@ -116,9 +120,9 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
     val exhausted = pending.value.isEmpty() &&
         rules.value.none { it.isEnabled && RecurrenceEngine.nextOccurrence(it, nowInstant) != null }
     ScreenScaffold(
-        title = card.folder?.name ?: "备忘录",
+        title = card.folder?.name ?: stringResource(R.string.det_note),
         onBack = { env.router.pop() },
-        actions = { TextAction("编辑") { env.router.push(Route.Editor(note.id, note.folderId)) } },
+        actions = { TextAction(stringResource(R.string.action_edit)) { env.router.push(Route.Editor(note.id, note.folderId)) } },
     ) { padding ->
         LazyColumn(
             Modifier
@@ -135,13 +139,13 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
                     brush = Brush.linearGradient(listOf(Color(0xFFF1F6FF), Color(0xFFDCEBFF))),
                 ) {
                     Text(
-                        note.title?.takeIf { it.isNotBlank() } ?: "无标题",
+                        note.title?.takeIf { it.isNotBlank() } ?: stringResource(R.string.det_no_title),
                         style = MaterialTheme.typography.headlineSmall,
                         color = AppColors.TextPrimary,
                     )
                     SpacerHeight(8)
                     Text(
-                        note.body.ifBlank { "（无正文）" },
+                        note.body.ifBlank { stringResource(R.string.det_no_body) },
                         style = MaterialTheme.typography.bodyLarge,
                         color = AppColors.TextSecondary,
                     )
@@ -149,10 +153,10 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         card.folder?.let { TagPill(it.name) }
                         Spacer(Modifier.width(6.dp))
-                        TagPill("${note.priority.label}优先级", tint = AppColors.TextSecondary)
+                        TagPill(stringResource(R.string.det_priority_label, stringResource(note.priority.labelRes)), tint = AppColors.TextSecondary)
                         if (note.status == NoteStatus.COMPLETED) {
                             Spacer(Modifier.width(6.dp))
-                            TagPill("已完成", tint = AppColors.Success)
+                            TagPill(stringResource(R.string.status_completed), tint = AppColors.Success)
                         }
                     }
                 }
@@ -163,19 +167,19 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
                     SectionSpacer(14)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         GlassButton(
-                            "完成",
+                            stringResource(R.string.det_complete),
                             modifier = Modifier.weight(1f),
                             icon = AppIcons.Check,
                             enabled = pending.value.isNotEmpty() || exhausted,
                         ) { runWork(work = { repo.complete(note.id) }, done = { env.state.invalidate() }) }
                         GlassButton(
-                            "稍后",
+                            stringResource(R.string.det_snooze_short),
                             modifier = Modifier.weight(1f),
                             icon = AppIcons.Clock,
                             enabled = pending.value.isNotEmpty(),
                         ) { snoozeTarget = true }
                         GlassButton(
-                            "跳过",
+                            stringResource(R.string.det_skip_short),
                             modifier = Modifier.weight(1f),
                             icon = AppIcons.SkipNext,
                             enabled = pending.value.isNotEmpty(),
@@ -186,14 +190,14 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
 
             item(key = "occurrences") {
                 SectionSpacer(16)
-                FieldLabel("待处理提醒 ${pending.value.size}")
+                FieldLabel(stringResource(R.string.det_pending_reminders, pending.value.size))
                 GlassCard(Modifier.fillMaxWidth(), corner = 20) {
                     if (pending.value.isEmpty()) {
                         Text(
                             when {
-                                exhausted -> "没有待处理的事件，也没有未来的触发点。点「完成」可归档到历史。"
-                                rules.value.any { it.isEnabled } -> "这一轮已经处理完，等下一次触发。"
-                                else -> "没有待处理的事件。"
+                                exhausted -> stringResource(R.string.det_exhausted_hint)
+                                rules.value.any { it.isEnabled } -> stringResource(R.string.det_round_done_hint)
+                                else -> stringResource(R.string.det_no_pending_hint)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = AppColors.TextTertiary,
@@ -222,11 +226,11 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
 
             item(key = "rules") {
                 SectionSpacer(16)
-                FieldLabel("提醒规则 ${rules.value.size}")
+                FieldLabel(stringResource(R.string.det_reminder_rules, rules.value.size))
                 GlassCard(Modifier.fillMaxWidth(), corner = 20) {
                     if (rules.value.isEmpty()) {
                         Text(
-                            "还没有提醒，先添加一条。",
+                            stringResource(R.string.det_no_rules_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = AppColors.TextTertiary,
                         )
@@ -247,7 +251,7 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
                     }
                     SpacerHeight(12)
                     TonalButton(
-                        "添加提醒",
+                        stringResource(R.string.det_add_reminder),
                         modifier = Modifier.fillMaxWidth(),
                         icon = AppIcons.Add,
                     ) { env.router.push(Route.RuleEditor(note.id, null)) }
@@ -257,7 +261,7 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
             if (attachments.value.isNotEmpty()) {
                 item(key = "attachments") {
                     SectionSpacer(16)
-                    FieldLabel("附件 ${attachments.value.size}")
+                    FieldLabel(stringResource(R.string.det_attachments_count, attachments.value.size))
                     GlassCard(Modifier.fillMaxWidth(), corner = 20) {
                         attachments.value.forEach { attachment ->
                             Row(
@@ -282,7 +286,7 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
                                     overflow = TextOverflow.Ellipsis,
                                 )
                                 Text(
-                                    attachment.type.label,
+                                    stringResource(attachment.type.labelRes),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = AppColors.TextTertiary,
                                 )
@@ -295,17 +299,17 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
             item(key = "meta") {
                 SectionSpacer(16)
                 GlassCard(Modifier.fillMaxWidth(), corner = 20) {
-                    KeyValueRow("创建于", dateTimeText(note.createdAt))
+                    KeyValueRow(stringResource(R.string.det_created_at), dateTimeText(context, note.createdAt))
                     SpacerHeight(8)
-                    KeyValueRow("最近更新", dateTimeText(note.updatedAt))
+                    KeyValueRow(stringResource(R.string.det_updated_at), dateTimeText(context, note.updatedAt))
                     SpacerHeight(8)
-                    KeyValueRow("完成按钮", if (note.completionEnabled) "已启用" else "已关闭")
+                    KeyValueRow(stringResource(R.string.det_completion_button), if (note.completionEnabled) stringResource(R.string.det_enabled) else stringResource(R.string.det_off))
                     SpacerHeight(8)
-                    KeyValueRow("锁屏正文", if (note.notificationPreviewEnabled) "展示" else "隐藏")
+                    KeyValueRow(stringResource(R.string.det_lock_screen_body), if (note.notificationPreviewEnabled) stringResource(R.string.det_shown) else stringResource(R.string.det_hidden))
                 }
                 SectionSpacer(14)
                 if (!env.notifications.permissionGranted) {
-                    InfoBanner("系统通知权限未开启，提醒到点也不会送达。")
+                    InfoBanner(stringResource(R.string.det_notification_permission_hint))
                     SectionSpacer(10)
                 }
                 SectionSpacer(10)
@@ -317,8 +321,8 @@ fun NoteDetailScreen(env: AppEnv, noteId: String) {
 
     if (snoozeTarget) {
         SnoozeDurationDialog(
-            title = "稍后提醒",
-            text = "只推迟当前这一次，不改变长期重复规则。",
+            title = stringResource(R.string.det_snooze),
+            text = stringResource(R.string.det_snooze_desc),
             selected = repo.settings.defaultSnoozeMinutes,
             onDismiss = { snoozeTarget = false },
             onPick = { minutes ->

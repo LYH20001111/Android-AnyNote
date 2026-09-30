@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===== 备忘录编辑页（NoteEditorScreen，ed_） ===== -->
+    <string name="ed_new_note">新建备忘录</string>
+    <string name="ed_edit_note">编辑备忘录</string>
+    <string name="ed_saving">保存中…</string>
+    <string name="ed_title_placeholder">标题（可留空）</string>
+    <string name="ed_body_placeholder">记录内容…</string>
+    <string name="ed_category">分类</string>
+    <string name="ed_priority">优先级</string>
+    <string name="ed_reminder_section">提醒（支持多条）</string>
+    <string name="ed_no_reminder_hint">尚未设置提醒，保存后这条备忘录会出现在「无提醒」分组。</string>
+    <string name="ed_add_reminder">添加提醒</string>
+    <string name="ed_add_another_reminder">再添加一条提醒</string>
+    <string name="ed_attachments">附件</string>
+    <string name="ed_attachment_note">语音与视频附件暂未开放；图片、文件会复制进应用私有目录，删除原文件不影响备忘录。</string>
+    <string name="ed_behavior">行为</string>
+    <string name="ed_enable_completion">启用完成状态</string>
+    <string name="ed_enable_completion_desc">通知上出现「完成 / 稍后提醒 / 跳过本次」</string>
+    <string name="ed_lock_screen_preview">锁屏显示正文</string>
+    <string name="ed_lock_screen_preview_desc">关闭后通知只提示「你有一个新的提醒」</string>
+    <string name="ed_attachment_import_failed">附件导入失败，请重试</string>
+    <string name="ed_empty_hint">先写点什么吧</string>
+    <string name="ed_need_category">请先在\"我的 → 分类管理\"里新建一个分类</string>
+    <string name="ed_done">完成</string>
+    <string name="ed_reminder_settings">提醒设置</string>
+    <string name="ed_disabled">已停用</string>
+    <string name="ed_delete_reminder">删除提醒</string>
+    <string name="ed_valid_until">有效期至 %1$s</string>
+
+    <!-- ===== 备忘录详情页（NoteDetailScreen，det_） ===== -->
+    <string name="det_note">备忘录</string>
+    <string name="det_no_title">无标题</string>
+    <string name="det_no_body">（无正文）</string>
+    <string name="det_priority_label">%1$s优先级</string>
+    <string name="det_complete">完成</string>
+    <string name="det_snooze_short">稍后</string>
+    <string name="det_skip_short">跳过</string>
+    <string name="det_pending_reminders">待处理提醒 %1$d</string>
+    <string name="det_exhausted_hint">没有待处理的事件，也没有未来的触发点。点「完成」可归档到历史。</string>
+    <string name="det_round_done_hint">这一轮已经处理完，等下一次触发。</string>
+    <string name="det_no_pending_hint">没有待处理的事件。</string>
+    <string name="det_reminder_rules">提醒规则 %1$d</string>
+    <string name="det_no_rules_hint">还没有提醒，先添加一条。</string>
+    <string name="det_add_reminder">添加提醒</string>
+    <string name="det_attachments_count">附件 %1$d</string>
+    <string name="det_created_at">创建于</string>
+    <string name="det_updated_at">最近更新</string>
+    <string name="det_completion_button">完成按钮</string>
+    <string name="det_enabled">已启用</string>
+    <string name="det_off">已关闭</string>
+    <string name="det_lock_screen_body">锁屏正文</string>
+    <string name="det_shown">展示</string>
+    <string name="det_hidden">隐藏</string>
+    <string name="det_notification_permission_hint">系统通知权限未开启，提醒到点也不会送达。</string>
+    <string name="det_snooze">稍后提醒</string>
+    <string name="det_snooze_desc">只推迟当前这一次，不改变长期重复规则。</string>
+    <string name="det_trash_confirm_title">移入回收站？</string>
+    <string name="det_trash_confirm_text">备忘录与它的提醒会停止调度，可在回收站恢复。</string>
+    <string name="det_move_to_trash">移入回收站</string>
+    <string name="det_status_scheduled">计划中</string>
+    <string name="det_status_triggered">已触达，等待处理</string>
+    <string name="det_status_snoozed">已推迟到 %1$s</string>
+    <string name="det_rule_summary">%1$s · %2$s</string>
+    <string name="det_disabled">已停用</string>
+    <string name="det_next">下次 %1$s</string>
+    <string name="det_no_future_occurrence">当前没有未来触发点</string>
+    <string name="det_trash_hint">回收站中的备忘录不再触发提醒</string>
+
+    <!-- ===== 通用组件（Controls.kt，ctl_） ===== -->
+    <string name="ctl_new">新建</string>
+</resources>

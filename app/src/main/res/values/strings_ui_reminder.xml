@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===== 提醒规则编辑页（ReminderRuleEditorScreen，re_） ===== -->
+    <string name="re_screen_title">提醒设置</string>
+    <string name="re_add_reminder">添加提醒</string>
+    <string name="re_saving">保存中…</string>
+    <string name="re_preview">预览：%1$s</string>
+    <string name="re_save_this_reminder">保存这条提醒</string>
+    <string name="re_rule_change_note">修改规则会取消旧闹钟并按新规则重新登记（基线 §23），已触达、已推迟的这一次事件保持不变。</string>
+    <string name="re_delete_confirm_title">删除这条提醒？</string>
+    <string name="re_delete_confirm_text">它会连同尚未触发的提醒事件一起移除。</string>
+
+    <!-- ===== 提醒规则表单（RuleForm，rf_） ===== -->
+    <string name="rf_repeat_type">重复方式</string>
+    <string name="rf_reminder_time">提醒时间</string>
+    <string name="rf_first_reminder_time">首次提醒 / 时刻</string>
+    <string name="rf_select_weekdays">选择星期</string>
+    <string name="rf_monthly_day_label">每月几号（当月不存在时自动落到最后一天）</string>
+    <string name="rf_month">月份</string>
+    <string name="rf_day">日期</string>
+    <string name="rf_interval">间隔</string>
+    <string name="rf_every_unit">每 %1$s</string>
+    <string name="rf_set_end_date">设置结束日期</string>
+    <string name="rf_end_until">到 %1$s 为止</string>
+    <string name="rf_no_end_date">长期有效</string>
+    <string name="rf_completion_mode">完成方式</string>
+    <string name="rf_mode_continue">本次完成</string>
+    <string name="rf_mode_end_series">结束系列</string>
+    <string name="rf_auto_re_remind">未处理时自动再提醒</string>
+    <string name="rf_auto_re_remind_desc">通知停留后按固定间隔再次提醒，仅影响本次事件</string>
+    <string name="rf_re_remind_interval">再提醒间隔</string>
+    <string name="rf_minutes">%1$d 分钟</string>
+    <string name="rf_max_repeats">最多重复</string>
+    <string name="rf_unlimited">不限</string>
+    <string name="rf_times">%1$d 次</string>
+    <string name="rf_enable_rule">启用此规则</string>
+    <string name="rf_recurring_zone_note">重复提醒按设备当前时区的钟表时间触发，跨时区旅行后仍是当地时间。</string>
+    <string name="rf_once_zone_note">单次提醒固定在你选择时所属的时区（%1$s），换时区后绝对时刻不变。</string>
+    <string name="rf_pick_reminder_time">选择提醒时间</string>
+    <string name="rf_pick_end_date">选择结束日期</string>
+    <string name="rf_date_ymd">%1$d 年 %2$d 月 %3$d 日</string>
+    <string name="rf_day_end_of_month">31（月末）</string>
+    <string name="rf_weekly_hint">每周按 %1$s 重复</string>
+    <string name="rf_monthly_hint">默认按每月 %1$d 日重复</string>
+    <string name="rf_yearly_hint">默认按每年 %1$d 月 %2$d 日重复</string>
+    <string name="rf_hint_from_start">按所选日期与时刻起算</string>
+</resources>

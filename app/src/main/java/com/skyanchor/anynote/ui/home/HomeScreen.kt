@@ -20,7 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.TimeGroup
 import com.skyanchor.anynote.core.groupOf
 import com.skyanchor.anynote.data.entity.Folder
@@ -68,11 +70,11 @@ fun HomeScreen(env: AppEnv) {
                 .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
-            SearchField(query, "搜索备忘录…", Modifier.fillMaxWidth()) { query = it }
+            SearchField(query, stringResource(R.string.home_search_placeholder), Modifier.fillMaxWidth()) { query = it }
             Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val selected = folderId
-                FilterChip("全部", selected == null) { folderId = null }
+                FilterChip(stringResource(R.string.action_all), selected == null) { folderId = null }
                 Spacer(Modifier.width(8.dp))
                 LazyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(folders.value, key = { it.id }) { folder ->
@@ -97,7 +99,11 @@ private fun HomeList(
     onClick: (NoteCard) -> Unit,
 ) {
     if (cards.isEmpty()) {
-        EmptyState(AppIcons.Bell, "还没有提醒", "点击右下角 + 新建一条备忘录")
+        EmptyState(
+            AppIcons.Bell,
+            stringResource(R.string.home_empty_title),
+            stringResource(R.string.home_empty_hint),
+        )
         return
     }
     val grouped = LinkedHashMap<TimeGroup, MutableList<NoteCard>>()
@@ -110,7 +116,7 @@ private fun HomeList(
     ) {
         grouped.forEach { (group, groupItems) ->
             item(key = "header_${group.name}") {
-                GroupLabel(group.label, groupItems.size, Modifier.padding(top = 8.dp))
+                GroupLabel(stringResource(group.labelRes), groupItems.size, Modifier.padding(top = 8.dp))
             }
             items(groupItems, key = { "card_${it.note.id}" }) { card ->
                 NoteRow(card = card, onClick = { onClick(card) })

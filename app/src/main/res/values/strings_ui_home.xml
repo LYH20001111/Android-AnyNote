@@ -1,0 +1,27 @@
+<resources>
+    <!-- 首页 -->
+    <string name="home_search_placeholder">搜索备忘录…</string>
+    <string name="home_empty_title">还没有提醒</string>
+    <string name="home_empty_hint">点击右下角 + 新建一条备忘录</string>
+
+    <!-- 日历 -->
+    <string name="cal_empty_title">这一天没有提醒</string>
+    <string name="cal_empty_hint">换一天看看，或点右下角 + 新建</string>
+    <string name="cal_jump_to_date">跳转到指定日期</string>
+    <string name="cal_prev_month">上一月</string>
+    <string name="cal_next_month">下一月</string>
+    <string name="cal_day_title">%1$d 月 %2$d 日 · %3$s</string>
+    <string name="cal_count_reminders">%1$d 条提醒</string>
+    <string name="cal_no_reminders">暂无提醒</string>
+    <string name="cal_fallback_title">备忘录</string>
+    <string name="cal_attachment_count">%1$d 附件</string>
+    <string name="cal_repeat_desc">重复提醒</string>
+
+    <!-- 欢迎页 -->
+    <string name="wel_tagline">让重要的事，不再被遗忘</string>
+    <string name="wel_get_started">开始使用</string>
+    <string name="wel_footnote">提醒时间支持精确到秒，实际送达由系统通知能力决定</string>
+
+    <!-- 主界面 -->
+    <string name="main_notification_permission_denied">未授予通知权限，提醒将无法送达</string>
+</resources>

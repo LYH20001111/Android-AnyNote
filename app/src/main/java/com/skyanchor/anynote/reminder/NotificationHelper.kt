@@ -78,12 +78,12 @@ class NotificationHelper(
         val desc = appContext.getString(R.string.channel_reminders_desc)
         nm.createNotificationChannels(
             listOf(
-                NotificationChannel(CHANNEL_SOUND, "$name（声音）", NotificationManager.IMPORTANCE_HIGH).apply {
+                NotificationChannel(CHANNEL_SOUND, appContext.getString(R.string.channel_sound_name, name), NotificationManager.IMPORTANCE_HIGH).apply {
                     description = desc
                     enableVibration(true)
                     lockscreenVisibility = Notification.VISIBILITY_PRIVATE
                 },
-                NotificationChannel(CHANNEL_SILENT, "$name（静音）", NotificationManager.IMPORTANCE_DEFAULT).apply {
+                NotificationChannel(CHANNEL_SILENT, appContext.getString(R.string.channel_silent_name, name), NotificationManager.IMPORTANCE_DEFAULT).apply {
                     description = desc
                     setSound(null, null)
                     enableVibration(false)
@@ -188,7 +188,7 @@ class NotificationHelper(
             .setContentTitle(
                 // 逾期标记只作前缀：标题本身仍要能认出是哪条备忘录
                 if (overdueMs > 0) {
-                    appContext.getString(R.string.notification_overdue_title, humanSpan(overdueMs), title)
+                    appContext.getString(R.string.notification_overdue_title, humanSpan(appContext, overdueMs), title)
                 } else {
                     title
                 }
@@ -242,7 +242,7 @@ class NotificationHelper(
         runCatching { manager.cancel(notificationId) }.onFailure {
             dao.recordHealth(
                 HealthKind.RECEIVER_INTERRUPTED.storage,
-                reason = "通知 $notificationId 取消失败：${it.javaClass.simpleName}",
+                reason = appContext.getString(R.string.health_reason_cancel_failed, notificationId, it.javaClass.simpleName),
                 detail = it.message,
             )
         }
@@ -263,7 +263,7 @@ class NotificationHelper(
             .setOngoing(true)
             .setShowWhen(false)
             .setContentTitle(appContext.getString(R.string.notification_fallback_title))
-            .setContentText(if (count > 0) "$count 条待处理" else "")
+            .setContentText(if (count > 0) appContext.getString(R.string.badge_pending_count, count) else "")
             .build()
 
     private fun channelFor(): String =

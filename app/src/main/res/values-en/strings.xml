@@ -1,0 +1,181 @@
+<resources>
+    <string name="app_name">AnyNote</string>
+    <string name="channel_reminders_name">Reminders</string>
+    <string name="channel_reminders_desc">Notifications for note reminders</string>
+    <string name="channel_sound_name">%1$s (Sound)</string>
+    <string name="channel_silent_name">%1$s (Silent)</string>
+    <string name="action_complete">Complete</string>
+    <string name="action_snooze">Snooze</string>
+    <string name="action_skip">Skip this time</string>
+    <string name="notification_fallback_title">Reminder</string>
+    <string name="notification_fallback_body">You have a new reminder</string>
+    <string name="notification_overdue_title">Overdue %1$s · %2$s</string>
+    <string name="notification_open">View details</string>
+    <string name="badge_pending_count">%1$d pending</string>
+
+    <!-- ===== Shared actions / status ===== -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_save">Save</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_close">Close</string>
+    <string name="action_add">Add</string>
+    <string name="action_search">Search</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_back">Back</string>
+    <string name="action_all">All</string>
+    <string name="action_restore">Restore</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_in_progress">In progress</string>
+    <string name="status_loading">Loading…</string>
+    <string name="status_overdue">Overdue</string>
+
+    <!-- ===== Enum display names ===== -->
+    <string name="priority_low">Low</string>
+    <string name="priority_medium">Medium</string>
+    <string name="priority_high">High</string>
+    <string name="attachment_image">Image</string>
+    <string name="attachment_file">File</string>
+    <string name="attachment_audio">Audio</string>
+    <string name="completion_continue">Complete this occurrence and keep future reminders</string>
+    <string name="completion_end_series">Finish the entire repeat series when completed</string>
+    <string name="type_once">One-time</string>
+    <string name="type_daily">Daily</string>
+    <string name="type_weekly">Weekly</string>
+    <string name="type_monthly">Monthly</string>
+    <string name="type_yearly">Yearly</string>
+    <string name="type_weekdays">Weekdays</string>
+    <string name="type_custom_weekdays">Custom weekdays</string>
+    <string name="type_interval">Fixed interval</string>
+    <string name="interval_unit_day">day</string>
+    <string name="interval_unit_week">week</string>
+    <string name="interval_unit_month">month</string>
+    <string name="interval_unit_year">year</string>
+    <string name="time_group_overdue">Overdue</string>
+    <string name="time_group_today">Today</string>
+    <string name="time_group_tomorrow">Tomorrow</string>
+    <string name="time_group_later">Later</string>
+    <string name="time_group_no_reminder">No reminder</string>
+    <string name="health_arm_failed">Alarm registration failed</string>
+    <string name="health_arm_degraded">Alarm downgraded</string>
+    <string name="health_delivery_blocked">Notification could not be shown</string>
+    <string name="health_missed_redelivered">Overdue, redelivered</string>
+    <string name="health_missed_dropped">Missed, past its window</string>
+    <string name="health_receiver_interrupted">Background work interrupted</string>
+    <string name="health_self_heal">Scheduler self-heal</string>
+    <string name="health_self_test">Self-test reminder</string>
+    <string name="health_alarm_cleared">System alarm disappeared</string>
+    <string name="health_receipt_ok">Self-test received</string>
+    <string name="health_receipt_missing">Self-test not received</string>
+    <string name="health_other">Other scheduler event</string>
+
+    <!-- ===== Time & recurrence wording (Formatters / RecurrenceEngine) ===== -->
+    <string name="span_day">d</string>
+    <string name="span_hour">h</string>
+    <string name="span_minute">m</string>
+    <string name="span_minutes">m</string>
+    <string name="rel_today">Today</string>
+    <string name="rel_tomorrow">Tomorrow</string>
+    <string name="rel_yesterday">Yesterday</string>
+    <string name="pattern_month_day">MMM d</string>
+    <string name="pattern_full_date">MMM d, yyyy</string>
+    <string name="pattern_full_date_time">MMM d, yyyy HH:mm</string>
+    <string name="pattern_month_title">MMMM yyyy</string>
+    <string name="weekday_mon">Mon</string>
+    <string name="weekday_tue">Tue</string>
+    <string name="weekday_wed">Wed</string>
+    <string name="weekday_thu">Thu</string>
+    <string name="weekday_fri">Fri</string>
+    <string name="weekday_sat">Sat</string>
+    <string name="weekday_sun">Sun</string>
+    <string name="weekday_joiner">, </string>
+    <string name="describe_daily">Daily</string>
+    <string name="describe_weekly">Every %1$s</string>
+    <string name="describe_monthly">Monthly on day %1$d</string>
+    <string name="describe_yearly">Yearly on %1$d/%2$d</string>
+    <string name="describe_weekdays">Mon–Fri</string>
+    <string name="describe_interval">Every %1$d %2$s</string>
+    <string name="describe_interval_week_suffix">, %1$s</string>
+
+    <!-- ===== Vendor device profiles (DeviceProfiles) ===== -->
+    <string name="oem_miui">Xiaomi / Redmi</string>
+    <string name="oem_emui">Huawei / Honor</string>
+    <string name="oem_coloros">OPPO / OnePlus</string>
+    <string name="oem_realme">realme</string>
+    <string name="oem_originos">vivo / iQOO</string>
+    <string name="oem_samsung">Samsung</string>
+    <string name="oem_smartisan">Smartisan</string>
+    <string name="oem_letv">LeEco</string>
+    <string name="oem_meizu">Meizu</string>
+    <string name="oem_zte">ZTE / Nubia</string>
+    <string name="oem_other">Standard Android</string>
+    <string name="target_autostart_miui">Xiaomi · Auto-start management</string>
+    <string name="target_autostart_emui">Huawei / Honor · App launch management</string>
+    <string name="target_autostart_coloros">OPPO / OnePlus · Auto-start management</string>
+    <string name="target_autostart_realme">realme · Auto-start management</string>
+    <string name="target_autostart_originos">vivo / iQOO · Background power drain</string>
+    <string name="target_autostart_samsung">Samsung · Always allow running</string>
+    <string name="target_autostart_smartisan">Smartisan · Auto-start management</string>
+    <string name="target_autostart_letv">LeEco · Auto-start management</string>
+    <string name="target_autostart_meizu">Meizu · Security Center</string>
+    <string name="target_autostart_zte">ZTE · Background management</string>
+    <string name="target_battery_miui">Xiaomi · Battery saver policies</string>
+    <string name="target_battery_emui">Huawei / Honor · Power launch management</string>
+    <string name="target_battery_coloros">OPPO / OnePlus · Power protection</string>
+    <string name="target_battery_originos">vivo / iQOO · Battery &amp; background</string>
+    <string name="hint_miui">Settings → App settings → App management → AnyNote → Auto-start, and set battery saver policy to \"No restrictions\"</string>
+    <string name="hint_emui">Settings → Apps → App launch management → AnyNote → switch to \"Manage manually\" and allow all three options</string>
+    <string name="hint_coloros">Settings → Apps → Auto-start management → allow AnyNote, and turn off \"Smart background control\" in power protection</string>
+    <string name="hint_originos">i Manager → App manager → Permissions → allow background power drain, and disable background freezing in battery settings</string>
+    <string name="hint_samsung">Settings → Battery → Put apps to sleep → remove AnyNote from the sleeping apps list</string>
+    <string name="hint_other">The system offers no API to read this state; if reminders are still missed, allow auto-start and background running for this app in system settings</string>
+    <string name="hint_default">Please allow auto-start for this app in system settings, and disable background freezing for it</string>
+
+    <!-- ===== Reminder self-test (AnyNoteRepository) ===== -->
+    <string name="selftest_title">Reminder self-test</string>
+    <string name="selftest_body">The system alarm should pop up a notification at %1$s. If you receive it, you can simply delete this note; if not, check the failure records under \"Notifications &amp; exact alarms → Reminder self-test\" and make sure auto-start is allowed.</string>
+    <string name="selftest_reason_queued">Scheduled for %1$s</string>
+    <string name="selftest_reason_none">Saved but no event was generated: the notification master switch may be off, or the system time is wrong</string>
+    <string name="selftest_receipt_ok">User confirmed it arrived on time after screen-off / swiping the app away</string>
+    <string name="selftest_receipt_missing">User confirmed it did not arrive: the alarm was registered, so the broadcast was blocked by the system or the vendor</string>
+
+    <!-- ===== Built-in default folders (first-run seed data) ===== -->
+    <string name="folder_life">Life</string>
+    <string name="folder_work">Work</string>
+    <string name="folder_family">Family</string>
+    <string name="folder_study">Study</string>
+    <string name="folder_other">Other</string>
+
+    <!-- ===== Scheduling diagnostics (Scheduler / Coordinator / NotificationHelper / AppContainer) ===== -->
+    <string name="arm_result_alarm_clock">Priority alarm</string>
+    <string name="arm_result_exact">Exact alarm</string>
+    <string name="arm_result_window">Time window</string>
+    <string name="arm_result_skipped">Not registered</string>
+    <string name="arm_result_failed">Registration failed</string>
+    <string name="health_reason_expired_archived">%1$d past the redelivery window; archived as expired</string>
+    <string name="health_reason_full_resync">Full schedule rebuild</string>
+    <string name="health_reason_rescued_delivered">Notification still in the shade; restored to pending as delivered</string>
+    <string name="health_reason_no_system_alarm">%1$d due event(s) in the database, but the system reports no alarm at all</string>
+    <string name="health_reason_arm_not_fulfilled">The alarm planned for %1$s was not honored by the system</string>
+    <string name="health_reason_arm_degraded">Exact alarm registration failed; fell back to a window alarm</string>
+    <string name="health_reason_watchdog_failed">Watchdog alarm registration failed: %1$s</string>
+    <string name="health_reason_cancel_failed">Failed to cancel notification %1$d: %2$s</string>
+    <string name="health_reason_no_permission">POST_NOTIFICATIONS not granted</string>
+    <string name="health_reason_notify_threw">notify() threw %1$s</string>
+    <string name="health_reason_unknown">Unknown</string>
+    <string name="health_reason_missed_requeued">Missed by %1$s; queued for redelivery (%2$s)</string>
+    <string name="health_reason_interrupted">%1$s: %2$s</string>
+
+    <!-- ===== Backup/restore errors (DataBackupManager) ===== -->
+    <string name="backup_error_db_missing">The database file does not exist yet; please open the app once first</string>
+    <string name="backup_error_invalid_file">This is not a valid AnyNote backup file</string>
+    <string name="backup_error_unsupported_format">Unsupported backup format version</string>
+    <string name="backup_error_missing_table">The backup database is missing table %1$s; the file may be corrupted</string>
+    <string name="backup_error_cannot_write">Cannot write to the selected location</string>
+
+    <!-- ===== Common errors / fallbacks (FileStore etc.) ===== -->
+    <string name="error_cannot_read_file">Cannot read the selected file</string>
+    <string name="attachment_fallback_name">Attachment</string>
+</resources>

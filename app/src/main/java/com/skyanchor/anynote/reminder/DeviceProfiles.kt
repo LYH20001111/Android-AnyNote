@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import com.skyanchor.anynote.R
 
 /**
  * 厂商省电与自启动管控的机型适配（基线 §24）。
@@ -17,22 +18,22 @@ import android.provider.Settings
  * 所有组件名都是尽力而为：它们随 ROM 版本漂移，且多数私有页面没有 intent-filter。
  * 因此 [launch] 一律先校验存在性、失败退回应用详情页，并且调用方必须把"没能直达"告诉用户。
  */
-enum class Oem(val label: String, val restricted: Boolean) {
-    MIUI("小米 / 红米", true),
-    EMUI("华为 / 荣耀", true),
-    COLOROS("OPPO / 一加", true),
-    REALME("realme", true),
-    ORIGINOS("vivo / iQOO", true),
-    SAMSUNG("三星", true),
-    SMARTISAN("锤子", true),
-    LETV("乐视", true),
-    MEIZU("魅族", true),
-    ZTE("中兴 / 努比亚", true),
-    OTHER("标准 Android", false),
+enum class Oem(val label: String, val labelRes: Int, val restricted: Boolean) {
+    MIUI("小米 / 红米", R.string.oem_miui, true),
+    EMUI("华为 / 荣耀", R.string.oem_emui, true),
+    COLOROS("OPPO / 一加", R.string.oem_coloros, true),
+    REALME("realme", R.string.oem_realme, true),
+    ORIGINOS("vivo / iQOO", R.string.oem_originos, true),
+    SAMSUNG("三星", R.string.oem_samsung, true),
+    SMARTISAN("锤子", R.string.oem_smartisan, true),
+    LETV("乐视", R.string.oem_letv, true),
+    MEIZU("魅族", R.string.oem_meizu, true),
+    ZTE("中兴 / 努比亚", R.string.oem_zte, true),
+    OTHER("标准 Android", R.string.oem_other, false),
 }
 
 /** 一个可跳转的厂商设置页；[component] 为 null 表示该机型没有已知的直达页面。 */
-data class SettingsTarget(val label: String, val component: ComponentName?)
+data class SettingsTarget(val labelRes: Int, val component: ComponentName?)
 
 object DeviceProfiles {
 
@@ -64,38 +65,38 @@ object DeviceProfiles {
 
     /** 自启动 / 关联启动管理页。 */
     fun autostartTarget(oem: Oem = current()): SettingsTarget? = when (oem) {
-        Oem.MIUI -> component("小米 · 自启动管理", "com.miui.securitycenter",
+        Oem.MIUI -> component(R.string.target_autostart_miui, "com.miui.securitycenter",
             "com.miui.permcenter.autostart.AutoStartManagementActivity")
-        Oem.EMUI -> component("华为 / 荣耀 · 应用启动管理", "com.huawei.systemmanager",
+        Oem.EMUI -> component(R.string.target_autostart_emui, "com.huawei.systemmanager",
             "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity")
-        Oem.COLOROS -> component("OPPO / 一加 · 自启动管理", "com.coloros.safecenter",
+        Oem.COLOROS -> component(R.string.target_autostart_coloros, "com.coloros.safecenter",
             "com.coloros.safecenter.startupapp.StartupColorosSettingActivity")
-        Oem.REALME -> component("realme · 自启动管理", "com.realme.securitycheck",
+        Oem.REALME -> component(R.string.target_autostart_realme, "com.realme.securitycheck",
             "com.realme.securitycheck.StartupAppManageActivity")
-        Oem.ORIGINOS -> component("vivo / iQOO · 后台高耗电", "com.vivo.settings",
+        Oem.ORIGINOS -> component(R.string.target_autostart_originos, "com.vivo.settings",
             "com.vivo.settings.Settings\$HighPowerApplicationsActivity")
-        Oem.SAMSUNG -> component("三星 · 始终允许运行", "com.samsung.android.lool",
+        Oem.SAMSUNG -> component(R.string.target_autostart_samsung, "com.samsung.android.lool",
             "com.samsung.android.sm.ui.battery.BatteryActivity")
-        Oem.SMARTISAN -> component("锤子 · 自启动管理", "com.android.settings",
+        Oem.SMARTISAN -> component(R.string.target_autostart_smartisan, "com.android.settings",
             "com.android.settings.SmartSafeModeAppPermission")
-        Oem.LETV -> component("乐视 · 自启动管理", "com.letv.android.letvsafe",
+        Oem.LETV -> component(R.string.target_autostart_letv, "com.letv.android.letvsafe",
             "com.letv.android.letvsafe.AutobootManageActivity")
-        Oem.MEIZU -> component("魅族 · 安全中心", "com.meizu.safe",
+        Oem.MEIZU -> component(R.string.target_autostart_meizu, "com.meizu.safe",
             "com.meizu.safe.security.SHORTCUTMainActivity")
-        Oem.ZTE -> component("中兴 · 后台管理", "com.zte.security",
+        Oem.ZTE -> component(R.string.target_autostart_zte, "com.zte.security",
             "com.zte.security.StartupManageActivity")
         Oem.OTHER -> null
     }
 
     /** 省电策略页：与自启动分开，因为用户经常只需要改其中一项。 */
     fun batteryTarget(oem: Oem = current()): SettingsTarget? = when (oem) {
-        Oem.MIUI -> component("小米 · 省电策略", "com.miui.powerkeeper",
+        Oem.MIUI -> component(R.string.target_battery_miui, "com.miui.powerkeeper",
             "com.miui.powerkeeper.ui.HiddenAppsConfigActivity")
-        Oem.EMUI -> component("华为 / 荣耀 · 电量启动管理", "com.huawei.systemmanager",
+        Oem.EMUI -> component(R.string.target_battery_emui, "com.huawei.systemmanager",
             "com.huawei.systemmanager.appcontrol.activity.StartupAppControlActivity")
-        Oem.COLOROS -> component("OPPO / 一加 · 耗电保护", "com.coloros.safecenter",
+        Oem.COLOROS -> component(R.string.target_battery_coloros, "com.coloros.safecenter",
             "com.coloros.safecenter.permission.startup.StartupAppListActivity")
-        Oem.ORIGINOS -> component("vivo / iQOO · 省电与后台", "com.iqoo.secure",
+        Oem.ORIGINOS -> component(R.string.target_battery_originos, "com.iqoo.secure",
             "com.iqoo.secure.ui.phoneoptimize.BgStartUpManager")
         else -> null
     }
@@ -109,6 +110,17 @@ object DeviceProfiles {
         Oem.SAMSUNG -> "设置 → 电池 → 将应用置于休眠状态 → 把随记移出休眠名单"
         Oem.OTHER -> "系统未提供读取接口；如仍出现漏响，请在系统设置里允许本应用自启动并保持后台运行"
         else -> "请在系统设置里允许本应用自启动，并关闭针对本应用的后台冻结"
+    }
+
+    /** 手工路径说明的资源 id，UI 层用 stringResource 解析成当前语言的文案。 */
+    fun manualHintRes(oem: Oem = current()): Int = when (oem) {
+        Oem.MIUI -> R.string.hint_miui
+        Oem.EMUI -> R.string.hint_emui
+        Oem.COLOROS, Oem.REALME -> R.string.hint_coloros
+        Oem.ORIGINOS -> R.string.hint_originos
+        Oem.SAMSUNG -> R.string.hint_samsung
+        Oem.OTHER -> R.string.hint_other
+        else -> R.string.hint_default
     }
 
     /**
@@ -148,6 +160,6 @@ object DeviceProfiles {
         true
     }.getOrDefault(false)
 
-    private fun component(label: String, pkg: String, cls: String): SettingsTarget =
-        SettingsTarget(label, ComponentName.unflattenFromString("$pkg/$cls"))
+    private fun component(labelRes: Int, pkg: String, cls: String): SettingsTarget =
+        SettingsTarget(labelRes, ComponentName.unflattenFromString("$pkg/$cls"))
 }

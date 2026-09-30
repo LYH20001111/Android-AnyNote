@@ -1,5 +1,8 @@
 package com.skyanchor.anynote.reminder
 
+import android.content.Context
+import com.skyanchor.anynote.R
+import com.skyanchor.anynote.core.weekdayRes
 import com.skyanchor.anynote.data.entity.ReminderRule
 import java.time.DayOfWeek
 import java.time.Instant
@@ -196,6 +199,50 @@ object RecurrenceEngine {
             RecurrenceType.INTERVAL -> {
                 val base = "每 ${max(1, rule.intervalValue)} ${rule.intervalUnit.label}"
                 if (rule.intervalUnit == IntervalUnit.WEEK) "$base，${weekdayLabel(start.dayOfWeek.value)}" else base
+            }
+        }
+        return "$prefix $time"
+    }
+
+    /** 列表/详情页的规则摘要文案（按系统语言显示，中文文案与 [describe] 一致）。 */
+    fun describe(context: Context, rule: ReminderRule): String {
+        val start = rule.startLocal
+        val time = start.toLocalTime().format(
+            if (start.second == 0) DISPLAY_MINUTE else DISPLAY_SECOND
+        )
+        val prefix = when (rule.type) {
+            RecurrenceType.ONCE ->
+                start.format(DateTimeFormatter.ofPattern(context.getString(R.string.pattern_full_date)))
+            RecurrenceType.DAILY -> context.getString(R.string.describe_daily)
+            RecurrenceType.WEEKLY ->
+                context.getString(R.string.describe_weekly, context.getString(weekdayRes(start.dayOfWeek.value)))
+            RecurrenceType.MONTHLY ->
+                context.getString(R.string.describe_monthly, rule.dayOfMonth ?: start.dayOfMonth)
+            RecurrenceType.YEARLY ->
+                context.getString(
+                    R.string.describe_yearly,
+                    rule.monthOfYear ?: start.monthValue,
+                    rule.dayOfMonth ?: start.dayOfMonth,
+                )
+
+            RecurrenceType.WEEKDAYS -> context.getString(R.string.describe_weekdays)
+            RecurrenceType.CUSTOM_WEEKDAYS ->
+                rule.weekdays.sorted()
+                    .joinToString(context.getString(R.string.weekday_joiner)) { context.getString(weekdayRes(it)) }
+            RecurrenceType.INTERVAL -> {
+                val base = context.getString(
+                    R.string.describe_interval,
+                    max(1, rule.intervalValue),
+                    context.getString(rule.intervalUnit.labelRes),
+                )
+                if (rule.intervalUnit == IntervalUnit.WEEK) {
+                    base + context.getString(
+                        R.string.describe_interval_week_suffix,
+                        context.getString(weekdayRes(start.dayOfWeek.value)),
+                    )
+                } else {
+                    base
+                }
             }
         }
         return "$prefix $time"

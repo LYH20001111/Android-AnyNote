@@ -27,8 +27,11 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.listTimeText
 import com.skyanchor.anynote.data.entity.NoteCard
 import com.skyanchor.anynote.data.entity.OccurrenceStatus
@@ -38,10 +41,10 @@ import com.skyanchor.anynote.ui.theme.AppColors
 import com.skyanchor.anynote.ui.theme.CategoryPalette
 
 private val TABS = listOf(
-    Tab.Home to "首页",
-    Tab.Calendar to "日历",
-    Tab.History to "历史",
-    Tab.Mine to "我的",
+    Tab.Home to R.string.list_tab_home,
+    Tab.Calendar to R.string.list_tab_calendar,
+    Tab.History to R.string.list_tab_history,
+    Tab.Mine to R.string.list_tab_mine,
 )
 
 private fun tabIcon(tab: Tab): ImageVector = when (tab) {
@@ -82,7 +85,7 @@ fun BottomTabBar(current: Tab, onSelect: (Tab) -> Unit) {
                 )
                 Spacer(Modifier.height(3.dp))
                 Text(
-                    label,
+                    stringResource(label),
                     style = MaterialTheme.typography.labelSmall,
                     color = if (active) AppColors.Primary else AppColors.TextTertiary,
                 )
@@ -117,7 +120,7 @@ fun NoteRow(
     val snoozed = occurrence?.status == OccurrenceStatus.SNOOZED
     val bodyLine = card.note.body.lineSequence().firstOrNull { it.isNotBlank() }
     val hasTitle = card.note.title?.isNotBlank() == true
-    val title = card.note.title?.takeIf { hasTitle } ?: bodyLine?.take(24) ?: "备忘录"
+    val title = card.note.title?.takeIf { hasTitle } ?: bodyLine?.take(24) ?: stringResource(R.string.list_fallback_title)
     val summary = if (hasTitle) bodyLine?.take(28) else null
 
     GlassCard(
@@ -157,8 +160,9 @@ fun NoteRow(
                     )
                 }
                 Spacer(Modifier.height(9.dp))
-                val timeLabel = (occurrence?.let { listTimeText(it.effectiveAt) } ?: "未设置提醒") +
-                    (card.rule?.let { if (it.type.recurring) " · ${RecurrenceEngine.describe(it)}" else "" } ?: "")
+                val ctx = LocalContext.current
+                val timeLabel = (occurrence?.let { listTimeText(ctx, it.effectiveAt) } ?: stringResource(R.string.list_no_reminder)) +
+                    (card.rule?.let { if (it.type.recurring) " · ${RecurrenceEngine.describe(ctx, it)}" else "" } ?: "")
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -174,10 +178,10 @@ fun NoteRow(
                         icon = AppIcons.Clock,
                     )
                     folder?.let { TagPill(it.name, tint = accent) }
-                    if (snoozed) TagPill("稍后提醒", tint = AppColors.Warning)
-                    if (overdue) TagPill("已逾期", tint = AppColors.Danger)
+                    if (snoozed) TagPill(stringResource(R.string.list_snoozed), tint = AppColors.Warning)
+                    if (overdue) TagPill(stringResource(R.string.status_overdue), tint = AppColors.Danger)
                     if (card.attachmentCount > 0) {
-                        TagPill("${card.attachmentCount} 附件", tint = AppColors.TextSecondary)
+                        TagPill(stringResource(R.string.list_attachment_count, card.attachmentCount), tint = AppColors.TextSecondary)
                     }
                 }
             }
@@ -218,7 +222,7 @@ fun StatusCheck(completed: Boolean, modifier: Modifier = Modifier) {
             ),
         contentAlignment = Alignment.Center,
     ) {
-        if (completed) Icon(AppIcons.Check, "已完成", tint = Color.White, modifier = Modifier.size(15.dp))
+        if (completed) Icon(AppIcons.Check, stringResource(R.string.status_completed), tint = Color.White, modifier = Modifier.size(15.dp))
     }
 }
 

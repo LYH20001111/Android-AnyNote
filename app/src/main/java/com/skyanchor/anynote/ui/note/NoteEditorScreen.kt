@@ -38,9 +38,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.FileStore
 import com.skyanchor.anynote.data.NoteDraft
 import com.skyanchor.anynote.data.entity.Attachment
@@ -99,7 +102,7 @@ fun NoteEditorScreen(env: AppEnv, noteId: String?, presetFolderId: String?) {
 
     if (noteId != null && seed.value == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("加载中…", style = MaterialTheme.typography.bodyMedium, color = AppColors.TextTertiary)
+            Text(stringResource(R.string.status_loading), style = MaterialTheme.typography.bodyMedium, color = AppColors.TextTertiary)
         }
         return
     }
@@ -116,6 +119,7 @@ private fun EditorForm(
 ) {
     val repo = env.repository
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val settings = repo.settings
     val initialAttachments = remember(seed) {
         seed?.attachments?.map {
@@ -147,7 +151,7 @@ private fun EditorForm(
 
     val pickAttachment = rememberAttachmentPickers(
         onPicked = { stored, type -> attachments = attachments + stored.toUi(type) },
-        onFailed = { env.toast("附件导入失败，请重试") },
+        onFailed = { env.toast(context.getString(R.string.ed_attachment_import_failed)) },
     )
 
     val keepKeys = attachments.filter { it.persisted }.map { it.key }.toSet()
@@ -158,11 +162,11 @@ private fun EditorForm(
 
     fun save() {
         if (body.isBlank() && title.isBlank()) {
-            env.toast("先写点什么吧")
+            env.toast(context.getString(R.string.ed_empty_hint))
             return
         }
         if (folderId.isEmpty()) {
-            env.toast("请先在\"我的 → 分类管理\"里新建一个分类")
+            env.toast(context.getString(R.string.ed_need_category))
             return
         }
         saving = true
@@ -209,13 +213,13 @@ private fun EditorForm(
     }
 
     ScreenScaffold(
-        title = if (noteId == null) "新建备忘录" else "编辑备忘录",
+        title = if (noteId == null) stringResource(R.string.ed_new_note) else stringResource(R.string.ed_edit_note),
         onBack = {
             discardUnsavedFiles()
             env.router.pop()
         },
         actions = {
-            TextAction(if (saving) "保存中…" else "保存") { if (!saving) save() }
+            TextAction(if (saving) stringResource(R.string.ed_saving) else stringResource(R.string.action_save)) { if (!saving) save() }
         },
     ) { padding ->
         Column(
@@ -229,7 +233,7 @@ private fun EditorForm(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    placeholder = { Text("标题（可留空）", color = AppColors.TextTertiary) },
+                    placeholder = { Text(stringResource(R.string.ed_title_placeholder), color = AppColors.TextTertiary) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     textStyle = MaterialTheme.typography.titleLarge.copy(color = AppColors.TextPrimary),
@@ -241,7 +245,7 @@ private fun EditorForm(
                 OutlinedTextField(
                     value = body,
                     onValueChange = { if (it.length <= BODY_MAX_LENGTH) body = it },
-                    placeholder = { Text("记录内容…", color = AppColors.TextTertiary) },
+                    placeholder = { Text(stringResource(R.string.ed_body_placeholder), color = AppColors.TextTertiary) },
                     minLines = 4,
                     maxLines = 12,
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = AppColors.TextPrimary),
@@ -261,7 +265,7 @@ private fun EditorForm(
             }
 
             SpacerHeight(14)
-            FieldLabel("分类")
+            FieldLabel(stringResource(R.string.ed_category))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(folders, key = { it.id }) { folder ->
                     FilterChip(
@@ -274,15 +278,15 @@ private fun EditorForm(
             }
 
             SpacerHeight(14)
-            FieldLabel("优先级")
-            SegmentedTabs(Priority.entries.map { it to it.label }, priority) { priority = it }
+            FieldLabel(stringResource(R.string.ed_priority))
+            SegmentedTabs(Priority.entries.map { it to stringResource(it.labelRes) }, priority) { priority = it }
 
             SpacerHeight(14)
-            FieldLabel("提醒（支持多条）")
+            FieldLabel(stringResource(R.string.ed_reminder_section))
             GlassCard(Modifier.fillMaxWidth(), corner = 18) {
                 if (rules.isEmpty()) {
                     Text(
-                        "尚未设置提醒，保存后这条备忘录会出现在「无提醒」分组。",
+                        stringResource(R.string.ed_no_reminder_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = AppColors.TextTertiary,
                     )
@@ -297,14 +301,14 @@ private fun EditorForm(
                     }
                 }
                 PrimaryButton(
-                    if (rules.isEmpty()) "添加提醒" else "再添加一条提醒",
+                    if (rules.isEmpty()) stringResource(R.string.ed_add_reminder) else stringResource(R.string.ed_add_another_reminder),
                     modifier = Modifier.fillMaxWidth(),
                     icon = AppIcons.Add,
                 ) { editingRule = newRule(noteId ?: NEW_NOTE_KEY).copy(completionMode = settings.defaultCompletionMode) }
             }
 
             SpacerHeight(14)
-            FieldLabel("附件")
+            FieldLabel(stringResource(R.string.ed_attachments))
             GlassCard(Modifier.fillMaxWidth(), corner = 18) {
                 AttachmentStrip(
                     items = attachments,
@@ -317,29 +321,29 @@ private fun EditorForm(
                 )
                 SpacerHeight(10)
                 Text(
-                    "语音与视频附件暂未开放；图片、文件会复制进应用私有目录，删除原文件不影响备忘录。",
+                    stringResource(R.string.ed_attachment_note),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppColors.TextTertiary,
                 )
             }
 
             SpacerHeight(14)
-            FieldLabel("行为")
+            FieldLabel(stringResource(R.string.ed_behavior))
             GlassCard(Modifier.fillMaxWidth(), corner = 18) {
                 SettingSwitch(
-                    "启用完成状态",
-                    "通知上出现「完成 / 稍后提醒 / 跳过本次」",
+                    stringResource(R.string.ed_enable_completion),
+                    stringResource(R.string.ed_enable_completion_desc),
                     completionEnabled,
                 ) { completionEnabled = it }
                 SettingSwitch(
-                    "锁屏显示正文",
-                    "关闭后通知只提示「你有一个新的提醒」",
+                    stringResource(R.string.ed_lock_screen_preview),
+                    stringResource(R.string.ed_lock_screen_preview_desc),
                     previewEnabled,
                 ) { previewEnabled = it }
             }
 
             SpacerHeight(20)
-            PrimaryButton("保存", modifier = Modifier.fillMaxWidth(), enabled = !saving) { save() }
+            PrimaryButton(stringResource(R.string.action_save), modifier = Modifier.fillMaxWidth(), enabled = !saving) { save() }
             Spacer(Modifier.height(28.dp))
         }
     }
@@ -386,23 +390,24 @@ private const val BODY_MAX_LENGTH = 1000
 
 @Composable
 private fun RuleSummaryRow(rule: ReminderRule, onEdit: () -> Unit, onDelete: () -> Unit) {
+    val context = LocalContext.current
     Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(AppIcons.Bell, null, tint = AppColors.Primary, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(9.dp))
             Column(Modifier.weight(1f)) {
-                Text(rule.type.label, style = MaterialTheme.typography.bodyLarge, color = AppColors.TextPrimary)
+                Text(stringResource(rule.type.labelRes), style = MaterialTheme.typography.bodyLarge, color = AppColors.TextPrimary)
                 Text(
-                    RecurrenceEngine.describe(rule),
+                    RecurrenceEngine.describe(context, rule),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppColors.TextSecondary,
                 )
             }
-            if (!rule.isEnabled) TagPill("已停用", tint = AppColors.TextTertiary)
-            TextAction("编辑", modifier = Modifier.padding(start = 6.dp)) { onEdit() }
+            if (!rule.isEnabled) TagPill(stringResource(R.string.ed_disabled), tint = AppColors.TextTertiary)
+            TextAction(stringResource(R.string.action_edit), modifier = Modifier.padding(start = 6.dp)) { onEdit() }
             Icon(
                 AppIcons.Delete,
-                "删除提醒",
+                stringResource(R.string.ed_delete_reminder),
                 tint = AppColors.TextTertiary,
                 modifier = Modifier
                     .padding(start = 10.dp)
@@ -413,7 +418,7 @@ private fun RuleSummaryRow(rule: ReminderRule, onEdit: () -> Unit, onDelete: () 
         val endDate = rule.endDate
         if (endDate != null) {
             Text(
-                "有效期至 $endDate",
+                stringResource(R.string.ed_valid_until, endDate),
                 style = MaterialTheme.typography.labelSmall,
                 color = AppColors.TextTertiary,
                 modifier = Modifier.padding(start = 25.dp, top = 2.dp),
@@ -466,9 +471,9 @@ private fun RuleFormDialog(
     var draft by remember(rule) { mutableStateOf(rule) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextAction("完成") { onConfirm(draft) } },
-        dismissButton = { TextAction("取消", color = AppColors.TextSecondary, onClick = onDismiss) },
-        title = { AppDialogTitle("提醒设置") },
+        confirmButton = { TextAction(stringResource(R.string.ed_done)) { onConfirm(draft) } },
+        dismissButton = { TextAction(stringResource(R.string.action_cancel), color = AppColors.TextSecondary, onClick = onDismiss) },
+        title = { AppDialogTitle(stringResource(R.string.ed_reminder_settings)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 RuleForm(draft) { draft = it }
@@ -482,7 +487,7 @@ private fun RuleFormDialog(
 private fun AttachmentPreview(item: AttachmentUi, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextAction("关闭", onClick = onDismiss) },
+        confirmButton = { TextAction(stringResource(R.string.action_close), onClick = onDismiss) },
         title = { AppDialogTitle(item.name) },
         text = {
             Column(

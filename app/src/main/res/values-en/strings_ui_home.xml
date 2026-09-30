@@ -1,0 +1,27 @@
+<resources>
+    <!-- Home -->
+    <string name="home_search_placeholder">Search notes…</string>
+    <string name="home_empty_title">No reminders yet</string>
+    <string name="home_empty_hint">Tap + at the bottom right to create a note</string>
+
+    <!-- Calendar -->
+    <string name="cal_empty_title">No reminders on this day</string>
+    <string name="cal_empty_hint">Try another day, or tap + at the bottom right to create one</string>
+    <string name="cal_jump_to_date">Jump to a date</string>
+    <string name="cal_prev_month">Previous month</string>
+    <string name="cal_next_month">Next month</string>
+    <string name="cal_day_title">%3$s · %1$d/%2$d</string>
+    <string name="cal_count_reminders">%1$d reminders</string>
+    <string name="cal_no_reminders">No reminders</string>
+    <string name="cal_fallback_title">Note</string>
+    <string name="cal_attachment_count">%1$d attachments</string>
+    <string name="cal_repeat_desc">Repeating reminder</string>
+
+    <!-- Welcome -->
+    <string name="wel_tagline">Important things, never forgotten</string>
+    <string name="wel_get_started">Get started</string>
+    <string name="wel_footnote">Reminder times can be precise to the second; actual delivery depends on the system\'s notification capabilities</string>
+
+    <!-- Main -->
+    <string name="main_notification_permission_denied">Notification permission not granted; reminders cannot be delivered</string>
+</resources>

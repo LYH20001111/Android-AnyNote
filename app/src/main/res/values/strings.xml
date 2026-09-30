@@ -2,6 +2,8 @@
     <string name="app_name">随记</string>
     <string name="channel_reminders_name">提醒</string>
     <string name="channel_reminders_desc">备忘录到点提醒的通知</string>
+    <string name="channel_sound_name">%1$s（声音）</string>
+    <string name="channel_silent_name">%1$s（静音）</string>
     <string name="action_complete">完成</string>
     <string name="action_snooze">稍后提醒</string>
     <string name="action_skip">跳过本次</string>
@@ -9,4 +11,171 @@
     <string name="notification_fallback_body">你有一个新的提醒</string>
     <string name="notification_overdue_title">逾期%1$s · %2$s</string>
     <string name="notification_open">查看详情</string>
+    <string name="badge_pending_count">%1$d 条待处理</string>
+
+    <!-- ===== 公共动作 / 状态（各界面共用，UI 层不要重复定义） ===== -->
+    <string name="action_cancel">取消</string>
+    <string name="action_ok">确定</string>
+    <string name="action_confirm">确认</string>
+    <string name="action_delete">删除</string>
+    <string name="action_save">保存</string>
+    <string name="action_edit">编辑</string>
+    <string name="action_close">关闭</string>
+    <string name="action_add">添加</string>
+    <string name="action_search">搜索</string>
+    <string name="action_clear">清空</string>
+    <string name="action_back">返回</string>
+    <string name="action_all">全部</string>
+    <string name="action_restore">恢复</string>
+    <string name="status_completed">已完成</string>
+    <string name="status_in_progress">进行中</string>
+    <string name="status_loading">加载中…</string>
+    <string name="status_overdue">已逾期</string>
+
+    <!-- ===== 枚举展示名 ===== -->
+    <string name="priority_low">低</string>
+    <string name="priority_medium">中</string>
+    <string name="priority_high">高</string>
+    <string name="attachment_image">图片</string>
+    <string name="attachment_file">文件</string>
+    <string name="attachment_audio">语音</string>
+    <string name="completion_continue">完成本次，后续继续提醒</string>
+    <string name="completion_end_series">完成后结束整个重复提醒</string>
+    <string name="type_once">单次提醒</string>
+    <string name="type_daily">每天</string>
+    <string name="type_weekly">每周</string>
+    <string name="type_monthly">每月</string>
+    <string name="type_yearly">每年</string>
+    <string name="type_weekdays">工作日</string>
+    <string name="type_custom_weekdays">自定义星期</string>
+    <string name="type_interval">固定间隔</string>
+    <string name="interval_unit_day">天</string>
+    <string name="interval_unit_week">周</string>
+    <string name="interval_unit_month">月</string>
+    <string name="interval_unit_year">年</string>
+    <string name="time_group_overdue">已逾期</string>
+    <string name="time_group_today">今天</string>
+    <string name="time_group_tomorrow">明天</string>
+    <string name="time_group_later">更后面</string>
+    <string name="time_group_no_reminder">无提醒</string>
+    <string name="health_arm_failed">闹钟注册失败</string>
+    <string name="health_arm_degraded">闹钟已降级</string>
+    <string name="health_delivery_blocked">通知未能弹出</string>
+    <string name="health_missed_redelivered">逾期已补发</string>
+    <string name="health_missed_dropped">错过已过时效</string>
+    <string name="health_receiver_interrupted">后台执行中断</string>
+    <string name="health_self_heal">调度自愈</string>
+    <string name="health_self_test">自检提醒</string>
+    <string name="health_alarm_cleared">系统侧闹钟已消失</string>
+    <string name="health_receipt_ok">自检已收到</string>
+    <string name="health_receipt_missing">自检未收到</string>
+    <string name="health_other">其他调度事件</string>
+
+    <!-- ===== 时间与重复规则文案（Formatters / RecurrenceEngine） ===== -->
+    <string name="span_day">天</string>
+    <string name="span_hour">小时</string>
+    <string name="span_minute">分</string>
+    <string name="span_minutes">分钟</string>
+    <string name="rel_today">今天</string>
+    <string name="rel_tomorrow">明天</string>
+    <string name="rel_yesterday">昨天</string>
+    <string name="pattern_month_day">M月d日</string>
+    <string name="pattern_full_date">yyyy年M月d日</string>
+    <string name="pattern_full_date_time">yyyy年M月d日 HH:mm</string>
+    <string name="pattern_month_title">yyyy 年 M 月</string>
+    <string name="weekday_mon">周一</string>
+    <string name="weekday_tue">周二</string>
+    <string name="weekday_wed">周三</string>
+    <string name="weekday_thu">周四</string>
+    <string name="weekday_fri">周五</string>
+    <string name="weekday_sat">周六</string>
+    <string name="weekday_sun">周日</string>
+    <string name="weekday_joiner">、</string>
+    <string name="describe_daily">每天</string>
+    <string name="describe_weekly">每%1$s</string>
+    <string name="describe_monthly">每月 %1$d 日</string>
+    <string name="describe_yearly">每年 %1$d 月 %2$d 日</string>
+    <string name="describe_weekdays">周一至周五</string>
+    <string name="describe_interval">每 %1$d %2$s</string>
+    <string name="describe_interval_week_suffix">，%1$s</string>
+
+    <!-- ===== 厂商机型适配（DeviceProfiles） ===== -->
+    <string name="oem_miui">小米 / 红米</string>
+    <string name="oem_emui">华为 / 荣耀</string>
+    <string name="oem_coloros">OPPO / 一加</string>
+    <string name="oem_realme">realme</string>
+    <string name="oem_originos">vivo / iQOO</string>
+    <string name="oem_samsung">三星</string>
+    <string name="oem_smartisan">锤子</string>
+    <string name="oem_letv">乐视</string>
+    <string name="oem_meizu">魅族</string>
+    <string name="oem_zte">中兴 / 努比亚</string>
+    <string name="oem_other">标准 Android</string>
+    <string name="target_autostart_miui">小米 · 自启动管理</string>
+    <string name="target_autostart_emui">华为 / 荣耀 · 应用启动管理</string>
+    <string name="target_autostart_coloros">OPPO / 一加 · 自启动管理</string>
+    <string name="target_autostart_realme">realme · 自启动管理</string>
+    <string name="target_autostart_originos">vivo / iQOO · 后台高耗电</string>
+    <string name="target_autostart_samsung">三星 · 始终允许运行</string>
+    <string name="target_autostart_smartisan">锤子 · 自启动管理</string>
+    <string name="target_autostart_letv">乐视 · 自启动管理</string>
+    <string name="target_autostart_meizu">魅族 · 安全中心</string>
+    <string name="target_autostart_zte">中兴 · 后台管理</string>
+    <string name="target_battery_miui">小米 · 省电策略</string>
+    <string name="target_battery_emui">华为 / 荣耀 · 电量启动管理</string>
+    <string name="target_battery_coloros">OPPO / 一加 · 耗电保护</string>
+    <string name="target_battery_originos">vivo / iQOO · 省电与后台</string>
+    <string name="hint_miui">设置 → 应用设置 → 应用管理 → 随记 → 自启动，并把省电策略设为「无限制」</string>
+    <string name="hint_emui">设置 → 应用 → 应用启动管理 → 随记 → 改为「手动管理」，三项全部允许</string>
+    <string name="hint_coloros">设置 → 应用 → 自启动项管理 → 允许随记，并在耗电保护里关闭「智能后台管控」</string>
+    <string name="hint_originos">i 管家 → 应用管理 → 权限管理 → 后台高耗电允许，并在电池里关闭后台冻结</string>
+    <string name="hint_samsung">设置 → 电池 → 将应用置于休眠状态 → 把随记移出休眠名单</string>
+    <string name="hint_other">系统未提供读取接口；如仍出现漏响，请在系统设置里允许本应用自启动并保持后台运行</string>
+    <string name="hint_default">请在系统设置里允许本应用自启动，并关闭针对本应用的后台冻结</string>
+
+    <!-- ===== 提醒自检（AnyNoteRepository） ===== -->
+    <string name="selftest_title">提醒自检</string>
+    <string name="selftest_body">系统闹钟应在 %1$s 到点时弹出一条通知。收到后可以直接删除本条备忘录；没收到请到「通知与精确闹钟 → 提醒自检」查看失败记录，并确认是否已允许自启动。</string>
+    <string name="selftest_reason_queued">已排定 %1$s</string>
+    <string name="selftest_reason_none">已保存但未生成任何事件：通知总开关可能已关闭，或系统时间异常</string>
+    <string name="selftest_receipt_ok">用户确认熄屏/划掉后台后仍按时收到</string>
+    <string name="selftest_receipt_missing">用户确认没收到：闹钟注册正常，说明广播被系统或厂商拦截</string>
+
+    <!-- ===== 默认内置文件夹（首次建库种子数据） ===== -->
+    <string name="folder_life">生活</string>
+    <string name="folder_work">工作</string>
+    <string name="folder_family">家庭</string>
+    <string name="folder_study">学习</string>
+    <string name="folder_other">其他</string>
+
+    <!-- ===== 调度诊断文案（Scheduler / Coordinator / NotificationHelper / AppContainer） ===== -->
+    <string name="arm_result_alarm_clock">最高优先级闹钟</string>
+    <string name="arm_result_exact">精确闹钟</string>
+    <string name="arm_result_window">时间窗口</string>
+    <string name="arm_result_skipped">未注册</string>
+    <string name="arm_result_failed">注册失败</string>
+    <string name="health_reason_expired_archived">%1$d 条已过补发时效，按过期归档</string>
+    <string name="health_reason_full_resync">全量重建调度</string>
+    <string name="health_reason_rescued_delivered">通知仍在栏上，该次按已触达接回待处理</string>
+    <string name="health_reason_no_system_alarm">库里 %1$d 条已到点、系统侧却查不到任何闹钟</string>
+    <string name="health_reason_arm_not_fulfilled">计划 %1$s 的注册未被系统兑现</string>
+    <string name="health_reason_arm_degraded">精确闹钟注册失败，已退化为窗口闹钟</string>
+    <string name="health_reason_watchdog_failed">看门狗闹钟注册失败：%1$s</string>
+    <string name="health_reason_cancel_failed">通知 %1$d 取消失败：%2$s</string>
+    <string name="health_reason_no_permission">POST_NOTIFICATIONS 未授权</string>
+    <string name="health_reason_notify_threw">notify() 抛出 %1$s</string>
+    <string name="health_reason_unknown">未知</string>
+    <string name="health_reason_missed_requeued">错过 %1$s，已排队补发（%2$s）</string>
+    <string name="health_reason_interrupted">%1$s：%2$s</string>
+
+    <!-- ===== 备份/恢复错误（DataBackupManager） ===== -->
+    <string name="backup_error_db_missing">数据库文件尚未生成，请先打开过一次应用</string>
+    <string name="backup_error_invalid_file">这不是有效的随记备份文件</string>
+    <string name="backup_error_unsupported_format">不支持的备份格式版本</string>
+    <string name="backup_error_missing_table">备份数据库缺少表 %1$s，文件可能已损坏</string>
+    <string name="backup_error_cannot_write">无法写入所选位置</string>
+
+    <!-- ===== 通用错误 / 兜底（FileStore 等） ===== -->
+    <string name="error_cannot_read_file">无法读取所选文件</string>
+    <string name="attachment_fallback_name">附件</string>
 </resources>

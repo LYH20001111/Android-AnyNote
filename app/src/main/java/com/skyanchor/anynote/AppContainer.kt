@@ -31,8 +31,8 @@ class AppContainer(context: Context) {
 
     val notifications = NotificationHelper(appContext, reminderDao, settings)
     val scheduler = ReminderScheduler(appContext, database, reminderDao, noteDao, settings, notifications)
-    val coordinator = ReminderCoordinator(noteDao, reminderDao, folderDao, settings, scheduler, notifications)
-    val repository = AnyNoteRepository(folderDao, noteDao, reminderDao, attachmentDao, settings, scheduler, coordinator)
+    val coordinator = ReminderCoordinator(appContext, noteDao, reminderDao, folderDao, settings, scheduler, notifications)
+    val repository = AnyNoteRepository(appContext, folderDao, noteDao, reminderDao, attachmentDao, settings, scheduler, coordinator)
     val dataBackup = DataBackupManager(appContext, database, scheduler)
 
     /**
@@ -87,7 +87,10 @@ class AppContainer(context: Context) {
     fun recordInterrupted(tag: String, failure: Throwable) {
         reminderDao.recordHealth(
             HealthKind.RECEIVER_INTERRUPTED.storage,
-            reason = "$tag：${failure.javaClass.simpleName}",
+            reason = appContext.getString(
+                com.skyanchor.anynote.R.string.health_reason_interrupted,
+                tag, failure.javaClass.simpleName,
+            ),
             detail = failure.message,
         )
     }

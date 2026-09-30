@@ -22,8 +22,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.dateText
 import com.skyanchor.anynote.core.timeOnlyText
 import com.skyanchor.anynote.core.toLocal
@@ -64,6 +67,19 @@ private enum class RangeTab(val label: String, val days: Int?) {
     ALL("全部", null),
 }
 
+private fun HistoryTab.labelRes(): Int = when (this) {
+    HistoryTab.COMPLETED -> R.string.status_completed
+    HistoryTab.SKIPPED -> R.string.hist_skipped
+    HistoryTab.EXPIRED -> R.string.status_overdue
+    HistoryTab.ALL -> R.string.action_all
+}
+
+private fun RangeTab.labelRes(): Int = when (this) {
+    RangeTab.WEEK -> R.string.hist_range_week
+    RangeTab.MONTH -> R.string.hist_range_month
+    RangeTab.ALL -> R.string.action_all
+}
+
 @Composable
 fun HistoryScreen(env: AppEnv) {
     val repo = env.repository
@@ -92,19 +108,19 @@ fun HistoryScreen(env: AppEnv) {
                 .padding(padding)
                 .padding(horizontal = 16.dp),
         ) {
-            SearchField(query, "搜索历史提醒…", Modifier.fillMaxWidth()) { query = it }
+            SearchField(query, stringResource(R.string.hist_search_hint), Modifier.fillMaxWidth()) { query = it }
             Spacer(Modifier.height(10.dp))
-            SegmentedTabs(HistoryTab.entries.map { it to it.label }, tab) { tab = it }
+            SegmentedTabs(HistoryTab.entries.map { it to stringResource(it.labelRes()) }, tab) { tab = it }
             Spacer(Modifier.height(10.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RangeTab.entries.forEach { option ->
-                    FilterChip(option.label, option == range, modifier = Modifier.padding(end = 8.dp)) { range = option }
+                    FilterChip(stringResource(option.labelRes()), option == range, modifier = Modifier.padding(end = 8.dp)) { range = option }
                 }
             }
             SpacerHeight(10)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 item(key = "all") {
-                    FilterChip("全部分类", folderId == null) { folderId = null }
+                    FilterChip(stringResource(R.string.hist_all_categories), folderId == null) { folderId = null }
                 }
                 items(folders.value, key = { it.id }) { folder ->
                     FilterChip(
@@ -120,7 +136,7 @@ fun HistoryScreen(env: AppEnv) {
             }
             SpacerHeight(12)
             if (entries.value.isEmpty()) {
-                EmptyState(AppIcons.History, "没有记录", "处理过的提醒会出现在这里。")
+                EmptyState(AppIcons.History, stringResource(R.string.hist_empty_title), stringResource(R.string.hist_empty_message))
             } else {
                 val grouped = LinkedHashMap<LocalDate, MutableList<Pair<NoteCard, ReminderOccurrence>>>()
                 entries.value.forEach { (card, occurrence) ->
@@ -134,8 +150,13 @@ fun HistoryScreen(env: AppEnv) {
                 ) {
                     grouped.forEach { (day, bucket) ->
                         item(key = "header_${day}_$tab") {
+                            val ctx = LocalContext.current
                             Text(
-                                "${dateText(day.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())} · ${bucket.size}",
+                                stringResource(
+                                    R.string.hist_day_count,
+                                    dateText(ctx, day.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()),
+                                    bucket.size,
+                                ),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = AppColors.TextPrimary,
                                 modifier = Modifier.padding(top = 8.dp),
@@ -166,10 +187,10 @@ private fun HistoryRow(card: NoteCard, occurrence: ReminderOccurrence, onClick: 
     val colorKey = folder?.colorKey ?: folder?.iconKey
     val accent = CategoryPalette.accent(colorKey)
     val (tint, label, statusIcon) = when (occurrence.status) {
-        OccurrenceStatus.COMPLETED -> Triple(AppColors.Success, "已完成", AppIcons.Check)
-        OccurrenceStatus.SKIPPED -> Triple(AppColors.Warning, "已跳过", AppIcons.SkipNext)
-        OccurrenceStatus.EXPIRED -> Triple(AppColors.Danger, "已逾期", AppIcons.Warning)
-        OccurrenceStatus.CANCELLED -> Triple(AppColors.TextTertiary, "已取消", AppIcons.Close)
+        OccurrenceStatus.COMPLETED -> Triple(AppColors.Success, stringResource(R.string.status_completed), AppIcons.Check)
+        OccurrenceStatus.SKIPPED -> Triple(AppColors.Warning, stringResource(R.string.hist_skipped), AppIcons.SkipNext)
+        OccurrenceStatus.EXPIRED -> Triple(AppColors.Danger, stringResource(R.string.status_overdue), AppIcons.Warning)
+        OccurrenceStatus.CANCELLED -> Triple(AppColors.TextTertiary, stringResource(R.string.hist_cancelled), AppIcons.Close)
         else -> Triple(AppColors.TextSecondary, occurrence.status.storage, AppIcons.History)
     }
     GlassCard(Modifier.fillMaxWidth(), corner = 20, contentPadding = PaddingValues(12.dp), onClick = onClick) {
@@ -180,7 +201,7 @@ private fun HistoryRow(card: NoteCard, occurrence: ReminderOccurrence, onClick: 
                 Text(
                     card.note.title?.takeIf { it.isNotBlank() }
                         ?: card.note.body.lineSequence().firstOrNull()?.take(24)
-                        ?: "备忘录",
+                        ?: stringResource(R.string.list_fallback_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = AppColors.TextPrimary,
                     maxLines = 1,

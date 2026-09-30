@@ -416,7 +416,7 @@ private fun ReminderSelfCheckSection(env: AppEnv, foreground: Int) {
                 onClick = {
                     val jumped = DeviceProfiles.launch(context, battery)
                     env.toast(
-                        if (jumped) "已跳到${battery.label}，请把随记设为无限制"
+                        if (jumped) "已跳到${context.getString(battery.labelRes)}，请把随记设为无限制"
                         else "未能直达，请手动查找省电策略设置"
                     )
                 },

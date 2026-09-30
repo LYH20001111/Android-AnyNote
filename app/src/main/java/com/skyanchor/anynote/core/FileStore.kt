@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.compose.ui.graphics.ImageBitmap
+import com.skyanchor.anynote.R
 import androidx.compose.ui.graphics.asImageBitmap
 import com.skyanchor.anynote.data.entity.AttachmentType
 import java.io.File
@@ -34,7 +35,7 @@ object FileStore {
         return runCatching {
             resolver.openInputStream(uri)?.use { input ->
                 target.outputStream().use { output -> input.copyTo(output) }
-            } ?: error("无法读取所选文件")
+            } ?: error(context.getString(R.string.error_cannot_read_file))
             StoredFile(
                 path = target.absolutePath,
                 fileName = name,
@@ -48,12 +49,13 @@ object FileStore {
     }
 
     fun displayName(context: Context, uri: Uri): String {
-        if (uri.scheme == "file") return uri.lastPathSegment ?: "附件"
+        if (uri.scheme == "file") return uri.lastPathSegment ?: context.getString(R.string.attachment_fallback_name)
         val cursor = runCatching {
             context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
-        }.getOrNull() ?: return uri.lastPathSegment ?: "附件"
+        }.getOrNull() ?: return uri.lastPathSegment ?: context.getString(R.string.attachment_fallback_name)
         return cursor.use {
-            if (it.moveToFirst() && !it.isNull(0)) it.getString(0) else (uri.lastPathSegment ?: "附件")
+            if (it.moveToFirst() && !it.isNull(0)) it.getString(0)
+            else (uri.lastPathSegment ?: context.getString(R.string.attachment_fallback_name))
         }
     }
 

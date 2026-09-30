@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ui/components/Lists.kt -->
+    <string name="list_tab_home">Home</string>
+    <string name="list_tab_calendar">Calendar</string>
+    <string name="list_tab_history">History</string>
+    <string name="list_tab_mine">Mine</string>
+    <string name="list_fallback_title">Note</string>
+    <string name="list_no_reminder">No reminder set</string>
+    <string name="list_snoozed">Snoozed</string>
+    <string name="list_attachment_count">%1$d attachments</string>
+
+    <!-- ui/components/Attachments.kt -->
+    <string name="att_add_image">Photo</string>
+    <string name="att_add_file">File</string>
+    <string name="att_remove_attachment">Remove attachment</string>
+
+    <!-- ui/components/Pickers.kt -->
+    <string name="pk_date_selection">%1$d-%2$d-%3$d</string>
+    <string name="pk_hour">Hour</string>
+    <string name="pk_minute">Min</string>
+    <string name="pk_second">Sec</string>
+    <string name="pk_quick_10min">In 10 min</string>
+    <string name="pk_quick_1hour">In 1 hour</string>
+    <string name="pk_quick_tomorrow_9am">Tomorrow 9 AM</string>
+
+    <!-- ui/history/HistoryScreen.kt -->
+    <string name="hist_search_hint">Search reminder history…</string>
+    <string name="hist_skipped">Skipped</string>
+    <string name="hist_range_week">Last 7 days</string>
+    <string name="hist_range_month">Last 30 days</string>
+    <string name="hist_all_categories">All categories</string>
+    <string name="hist_empty_title">No records</string>
+    <string name="hist_empty_message">Processed reminders will appear here.</string>
+    <string name="hist_day_count">%1$s · %2$d</string>
+    <string name="hist_cancelled">Cancelled</string>
+</resources>

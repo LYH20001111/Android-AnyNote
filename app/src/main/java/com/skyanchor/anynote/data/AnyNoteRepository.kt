@@ -1,5 +1,7 @@
 package com.skyanchor.anynote.data
 
+import android.content.Context
+import com.skyanchor.anynote.R
 import com.skyanchor.anynote.core.compactDateTimeText
 import com.skyanchor.anynote.data.db.DefaultFolders
 import com.skyanchor.anynote.data.dao.AttachmentDao
@@ -48,6 +50,7 @@ data class NoteDraft(
  * 应用唯一的数据入口。写操作一律遵循"更新数据库 → 重新调度系统闹钟"（基线 §23）。
  */
 class AnyNoteRepository(
+    context: Context,
     val folders: FolderDao,
     val notes: NoteDao,
     val reminders: ReminderDao,
@@ -56,6 +59,7 @@ class AnyNoteRepository(
     private val scheduler: ReminderScheduler,
     private val coordinator: ReminderCoordinator,
 ) {
+    private val appContext = context.applicationContext
 
     // region queries
 
@@ -290,9 +294,8 @@ class AnyNoteRepository(
         )
         val note = saveNote(
             NoteDraft(
-                title = "提醒自检",
-                body = "系统闹钟应在 ${compactDateTimeText(startAt)} 到点时弹出一条通知。收到后可以直接删除本条备忘录；" +
-                    "没收到请到「通知与精确闹钟 → 提醒自检」查看失败记录，并确认是否已允许自启动。",
+                title = appContext.getString(R.string.selftest_title),
+                body = appContext.getString(R.string.selftest_body, compactDateTimeText(startAt)),
                 folderId = folderId,
                 priority = Priority.LOW,
                 completionEnabled = true,
@@ -303,8 +306,8 @@ class AnyNoteRepository(
         val queued = reminders.pendingForNote(note.id).firstOrNull()
         reminders.recordHealth(
             HealthKind.SELF_TEST.storage,
-            reason = if (queued == null) "已保存但未生成任何事件：通知总开关可能已关闭，或系统时间异常"
-            else "已排定 ${compactDateTimeText(startAt)}",
+            reason = if (queued == null) appContext.getString(R.string.selftest_reason_none)
+            else appContext.getString(R.string.selftest_reason_queued, compactDateTimeText(startAt)),
             ruleId = rule.id,
             occurrenceId = queued?.id,
             scheduledAt = plannedAt,
@@ -327,8 +330,8 @@ class AnyNoteRepository(
         val planned = latestHealth(HealthKind.SELF_TEST.storage)
         reminders.recordHealth(
             if (received) HealthKind.RECEIPT_OK.storage else HealthKind.RECEIPT_MISSING.storage,
-            reason = if (received) "用户确认熄屏/划掉后台后仍按时收到"
-            else "用户确认没收到：闹钟注册正常，说明广播被系统或厂商拦截",
+            reason = if (received) appContext.getString(R.string.selftest_receipt_ok)
+            else appContext.getString(R.string.selftest_receipt_missing),
             ruleId = planned?.ruleId,
             occurrenceId = planned?.occurrenceId,
             scheduledAt = planned?.scheduledAt,
